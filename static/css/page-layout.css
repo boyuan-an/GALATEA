@@ -1,0 +1,239 @@
+/* Shared reading width, alignment and spacing for the project page sections. */
+body {
+  color: #34424a;
+  line-height: 1.55;
+  text-rendering: optimizeLegibility;
+  font-kerning: normal;
+}
+
+body > .section {
+  padding: 4rem 2rem;
+  scroll-margin-top: 1.5rem;
+}
+
+body > .section[id] > .container {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+}
+
+body > .section h2.title,
+#figure-4 #hoi-heading {
+  margin: 0 0 2rem;
+  color: #26353d;
+  font-family: 'Google Sans', 'Noto Sans', sans-serif;
+  font-weight: 600;
+  font-size: clamp(2.25rem, 3.5vw, 3.5rem);
+  line-height: 1.2;
+  letter-spacing: -.035em;
+  text-align: center;
+  text-wrap: balance;
+}
+
+#abstract .abstract-copy {
+  max-width: 1160px;
+  margin: 0 auto;
+  color: #41464a;
+  font-size: clamp(1.625rem, 1.55vw, 1.875rem);
+  line-height: 1.75;
+  letter-spacing: -.012em;
+  text-align: left;
+  text-wrap: pretty;
+}
+
+.overview-stages.columns,
+.rollout-grid.columns {
+  display: grid;
+  gap: 1.5rem;
+  margin: 0;
+}
+
+.overview-stages.columns { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.rollout-grid.columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.overview-stages.columns > .column,
+.rollout-grid.columns > .column {
+  width: auto;
+  min-width: 0;
+  padding: 0;
+}
+
+.overview-stages .academic-card {
+  padding: 1.5rem;
+  border-radius: 10px;
+}
+
+.overview-stages .tag { margin: 0; }
+.overview-stages h3 { margin: 1rem 0 .75rem; font-size: 1.5rem; line-height: 1.35; }
+.overview-stages h3 { color: #30434c; font-weight: 600; letter-spacing: -.02em; }
+.overview-stages p { color: #596870; font-size: 1.125rem; line-height: 1.7; text-wrap: pretty; }
+
+body > .section .page-figure { margin: 0; }
+#method .page-figure { margin-top: 2.5rem; }
+
+body > .section .page-figure figcaption {
+  max-width: 980px;
+  margin: 1rem auto 0;
+  color: #65737a;
+  font-size: 1.125rem;
+  line-height: 1.7;
+  text-wrap: pretty;
+  text-align: left;
+}
+
+.page-intro,
+#figure-4 .hoi-intro {
+  max-width: 1080px;
+  margin: 0 auto 2rem;
+  color: #555;
+  font-size: 1.25rem;
+  line-height: 1.75;
+  text-wrap: pretty;
+  text-align: center;
+}
+
+#figure-4 .hoi-intro { margin-top: 2.5rem; }
+#highlights #pipeline-showcase { max-width: none; margin: 0; }
+#figure-4 .hoi-explorer { gap: 1.5rem; }
+#figure-4 .hoi-object { padding: .65rem .75rem; font-size: .875rem; }
+#figure-4 .hoi-method { font-size: .875rem; }
+#figure-4 .hoi-card-heading { min-height: 44px; }
+#experiments .rollout-grid { margin-top: 2rem; }
+#experiments .experiment-placeholder { height: 100%; padding: 1.5rem; }
+
+#paper pre {
+  margin: 0;
+  padding: 1.5rem;
+  border: 1px solid #e5e7e9;
+  border-radius: 10px;
+  background: #f7f8fa;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: .875rem;
+  line-height: 1.75;
+}
+
+#paper pre code {
+  color: #43535b;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+@media (min-width: 769px) and (max-width: 1100px) {
+  .overview-stages h3 { min-height: 2.7em; }
+}
+
+@media (min-width: 769px) and (max-width: 1023px) {
+  #abstract .abstract-copy { font-size: 1.25rem; }
+  .overview-stages h3 { font-size: 1.3rem; }
+  .overview-stages p { font-size: 1rem; }
+}
+
+@media (min-width: 1024px) {
+  #figure-4 .hoi-object,
+  #figure-4 .hoi-method,
+  #figure-4 .hoi-action,
+  #figure-4 .hoi-controls .button { font-size: 1rem; }
+  #figure-4 #hoi-status,
+  #figure-4 #hoi-layout,
+  #figure-4 .hoi-view-hint,
+  #figure-4 .hoi-selection-note { font-size: .875rem; }
+  #highlights .ps-sample,
+  #highlights .ps-action,
+  #highlights .ps-controls .button { font-size: .875rem; }
+  #highlights .ps-view-caption,
+  #highlights .ps-stage-button[data-stage="trajectory"] .ps-stage-caption { font-size: 1rem; }
+  #highlights .ps-step-label { font-size: .75rem; }
+  #highlights .ps-stage-caption { font-size: .8125rem; }
+}
+
+/* On wide 16:9 displays, constrain the reading column and reduce vertical
+ * rhythm so the page does not feel like it is being viewed at 125% zoom. */
+@media (min-width: 1200px) and (min-aspect-ratio: 3/2) {
+  body > .section { padding: 3.25rem 2rem; }
+  body > .section[id] > .container { max-width: 1120px; }
+  body > .section h2.title,
+  #figure-4 #hoi-heading {
+    margin-bottom: 1.5rem;
+    font-size: clamp(2rem, 2.4vw, 2.625rem);
+  }
+  #abstract .abstract-copy {
+    max-width: 980px;
+    font-size: clamp(1.2rem, 1.1vw, 1.3125rem);
+    line-height: 1.7;
+    letter-spacing: 0;
+  }
+  .page-intro,
+  #figure-4 .hoi-intro {
+    max-width: 920px;
+    margin-bottom: 1.5rem;
+    font-size: 1.05rem;
+    line-height: 1.65;
+  }
+  .overview-stages .academic-card { padding: 1.25rem; }
+  .overview-stages h3 { font-size: 1.3rem; }
+  .overview-stages p { font-size: 1rem; line-height: 1.6; }
+  body > .section .page-figure figcaption { font-size: 1rem; }
+  #highlights #pipeline-showcase { max-width: 1000px; margin-inline: auto; }
+  #highlights .ps-panel { padding: 16px; }
+  #highlights .ps-selector { padding-bottom: 12px; margin-bottom: 16px; }
+  #highlights .ps-reconstruction-group { margin-top: 16px; padding: .75rem; }
+  #highlights .ps-transport { margin-top: 12px; padding-top: .75rem; }
+  #method .embedded-figure,
+  #results .embedded-figure { max-height: min(680px, 68svh); object-fit: contain; }
+  #experiments .rollout-reel { max-width: min(1080px, 118svh); margin-inline: auto; }
+  #figure-4 #hoi-objects { max-height: min(600px, 60svh); }
+}
+
+/* Keep both comparison rows and their shared controls close together on
+ * 1366×768 / 1440×900-class laptop viewports. */
+@media (min-width: 1200px) and (min-aspect-ratio: 3/2) and (max-height: 850px) {
+  #highlights { padding-block: 2rem; scroll-margin-top: 0; }
+  #highlights h2.title { font-size: 2rem; margin-bottom: 1rem; }
+  #highlights #pipeline-showcase { max-width: 840px; }
+  #highlights .ps-selector { padding-bottom: 8px; margin-bottom: 12px; }
+  #highlights .ps-sample { padding: .45rem .8rem; }
+  #highlights .ps-view-caption { min-height: 20px; margin-bottom: .35rem; font-size: .875rem; }
+  #highlights .ps-stages { max-width: 640px; margin-inline: auto; }
+  #highlights .ps-transport { margin-top: 8px; padding-top: .5rem; }
+  #highlights .ps-timeline-surface { padding-block: 8px; min-height: 34px; }
+  #highlights .ps-cursor { top: 5px; bottom: 5px; }
+  #highlights .ps-controls .button { min-height: 32px; font-size: .8rem; }
+}
+
+@media (max-width: 768px) {
+  body > .section { padding: 3rem 1.5rem; }
+  body > .section h2.title, #figure-4 #hoi-heading { margin-bottom: 1.5rem; font-size: 2rem; }
+  #abstract .abstract-copy { font-size: 1.125rem; line-height: 1.8; }
+  .overview-stages.columns { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+  .overview-stages .academic-card { padding: 1.25rem; }
+  .overview-stages h3 { font-size: 1.3rem; }
+  .overview-stages p { font-size: 1rem; }
+  #method .page-figure { margin-top: 2rem; }
+  body > .section .page-figure figcaption { font-size: .9375rem; line-height: 1.65; }
+  .page-intro, #figure-4 .hoi-intro { font-size: 1rem; line-height: 1.7; }
+  #figure-4 .hoi-intro { margin-top: 2rem; }
+  #figure-4 .hoi-explorer { gap: 1rem; }
+  #paper pre { padding: 1.1rem; font-size: .8rem; }
+}
+
+@media (max-width: 600px) {
+  .rollout-grid.columns { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+}
+
+/* Responsive YouTube player above the abstract. */
+.project-video-player {
+  width: 100%;
+  max-width: 1160px;
+  aspect-ratio: 16 / 9;
+  margin-inline: auto;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #05080a;
+}
+
+.project-video-player iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}

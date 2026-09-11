@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="GALATEA: Grounding Generated Video Plans in Simulation Towards Versatile Dexterous Controllers">
+  <meta name="author" content="Tianyue Wu, Boyuan An, Shuqi Zhao, Heyu Guo, Wanli Xing, Yi Ma, Kaifeng Zhang, Ruihai Wu, Masayoshi Tomizuka">
+  <meta name="keywords" content="Reinforcement Learning, Sim-to-Real Transfer, Humanoid Teleoperatin, GPT-4o, Learning from Demonstration">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GALATEA</title>
+
+  <link href="./static/css/fonts.css"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="./static/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css?v=20260909-mobile-background">
+  <link rel="stylesheet" href="./static/css/hoi-comparison.css">
+  <link rel="stylesheet" href="./static/css/pipeline-showcase.css?v=20260909-clean-track">
+  <link rel="stylesheet" href="./static/css/real-world-rollouts.css?v=20260910-buffer">
+  <link rel="stylesheet" href="./static/css/page-layout.css?v=20260909-youtube">
+  <link rel="stylesheet" href="./static/css/galatea-cover-palette.css?v=20260909-cover-palette">
+  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" referrerpolicy="no-referrer" /> -->
+
+  <script src="./static/js/jquery-3.5.1.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js?v=20260910-lazy-figures"></script>
+  <script defer src="./static/js/media-buffer.js?v=20260910-buffer"></script>
+  <script defer src="./static/js/hoi-comparison-data.js"></script>
+  <script defer src="./static/js/hoi-comparison.js?v=20260910-buffered-media"></script>
+  <script defer src="./static/js/pipeline-showcase-data.js?v=20260909-stream-optimized"></script>
+  <script defer src="./static/js/pipeline-showcase.js?v=20260910-buffered-media"></script>
+  <script defer src="./static/js/real-world-rollouts-data.js?v=20260910-bytes"></script>
+  <script defer src="./static/js/real-world-rollouts.js?v=20260910-buffered-media"></script>
+
+  <link rel="icon" type="image/png" href="./static/images/galatea-favicon-optimized.png">
+
+
+  <meta property="article:publisher" content="https://tairanhe.com/" />
+
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="GALATEA: Grounding Generated Video Plans in Simulation Towards Versatile Dexterous Controllers">
+  <meta property="og:description" content="GALATEA turns generated hand–object interaction videos into executable dexterous actions.">
+  <meta property="og:url" content="https://bgdabyss.github.io/GALATEA/">
+  <meta property="og:image" content="https://bgdabyss.github.io/GALATEA/static/images/cover/galatea-social-preview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="720">
+  <meta property="og:image:alt" content="GALATEA project title over a dexterous robot manipulation scene">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="GALATEA: Grounding Generated Video Plans in Simulation Towards Versatile Dexterous Controllers">
+  <meta name="twitter:description" content="Generated video plans, grounded in simulation, executed by versatile dexterous controllers.">
+  <meta name="twitter:image" content="https://bgdabyss.github.io/GALATEA/static/images/cover/galatea-social-preview.png">
+</head>
+
+
+<body>
+<a class="skip-link" href="#abstract">Skip to abstract</a>
+<header class="galatea-cover" aria-labelledby="publication-title">
+  <div class="galatea-cover__shade" aria-hidden="true"></div>
+  <div class="galatea-cover__main">
+    <div class="galatea-cover__rule" aria-hidden="true"></div>
+    <div class="galatea-cover__copy">
+      <p class="galatea-cover__brand">GALATEA</p>
+      <h1 id="publication-title" class="galatea-cover__title">
+        <span>Grounding Generated Video</span>
+        <span>Plans in Simulation Towards</span>
+        <span>Versatile Dexterous Controllers</span>
+      </h1>
+
+      <div class="galatea-cover__authors publication-authors" aria-label="Authors">
+        <p class="galatea-cover__author-line galatea-cover__author-line--one">
+          <a href="https://tianyueh8erobot.github.io/" target="_blank" rel="noopener noreferrer"><span class="galatea-cover__author-name">Tianyue Wu</span><sup>2,3,1,*,‡</sup></a>,
+          <a href="https://boyuan-an.github.io/" target="_blank" rel="noopener noreferrer"><span class="galatea-cover__author-name">Boyuan An</span><sup>2,1,*</sup></a>,
+          <a href="https://zhao-sq.github.io/" target="_blank" rel="noopener noreferrer"><span class="galatea-cover__author-name">Shuqi Zhao</span><sup>1</sup></a>,
+          <a href="https://github.com/GuoHeyu" target="_blank" rel="noopener noreferrer"><span class="galatea-cover__author-name">Heyu Guo</span><sup>2</sup></a>,
+          <a href="https://wlxing1901.github.io/" target="_blank" rel="noopener noreferrer"><span class="galatea-cover__author-name">Wanli Xing</span><sup>2</sup></a>
+        </p>
+        <p class="galatea-cover__author-line galatea-cover__author-line--two">
+          <a href="https://people.eecs.berkeley.edu/~yima/" target="_blank" rel="noopener noreferrer"><span class="galatea-cover__author-name">Yi Ma</span><sup>3,1</sup></a>,
+          <a href="https://openreview.net/profile?id=%7EKaifeng_Zhang1" target="_blank" rel="noopener noreferrer"><span class="galatea-cover__author-name">Kaifeng Zhang</span><sup>2</sup></a>,
+          <a href="https://warshallrho.github.io/" target="_blank" rel="noopener noreferrer"><span class="galatea-cover__author-name">Ruihai Wu</span><sup>1,†</sup></a>,
+          <a href="https://me.berkeley.edu/people/masayoshi-tomizuka/" target="_blank" rel="noopener noreferrer"><span class="galatea-cover__author-name">Masayoshi Tomizuka</span><sup>1,†</sup></a>
+        </p>
+        <div class="galatea-cover__author-notes"><p><sup>1</sup> UC Berkeley · <sup>2</sup> Sharpa · <sup>3</sup> The University of Hong Kong</p><p><sup>*</sup> Co-first authors · <sup>†</sup> Co-advisors · <sup>‡</sup> Corresponding author</p></div>
+      </div>
+
+      <div class="galatea-cover__meta">
+        <nav class="galatea-cover__actions" aria-label="Project links">
+          <a href="./resources/GALATEA_paper.pdf"><i class="fas fa-file-pdf" aria-hidden="true"></i><span>Paper</span></a>
+          <a href="https://arxiv.org/abs/2609.10050" target="_blank" rel="noopener noreferrer"><i class="ai ai-arxiv" aria-hidden="true"></i><span>arXiv</span></a>
+          <a href="https://github.com/boyuan-an/GALATEA" target="_blank" rel="noopener noreferrer"><i class="fab fa-github" aria-hidden="true"></i><span>Code (by Nov.)</span></a>
+          <a href="https://youtu.be/PQu57V2XnlM" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube" aria-hidden="true"></i><span>Video</span></a>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <div class="galatea-cover__institutions" aria-label="Affiliations">
+    <img src="./static/images/cover/uc-berkeley-white.png" alt="University of California, Berkeley">
+    <img src="./static/images/cover/sharpa-light.png" alt="Sharpa">
+    <img src="./static/images/cover/hku-white.png" alt="The University of Hong Kong">
+  </div>
+</header>
+
+<section class="section" id="video" aria-labelledby="video-heading">
+  <div class="container">
+    <h2 class="title is-2 has-text-centered" id="video-heading">Video</h2>
+    <div class="project-video-player">
+      <iframe src="https://www.youtube.com/embed/PQu57V2XnlM" title="GALATEA project video" width="1120" height="630" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="abstract"><div class="container">
+  <h2 class="title is-2 has-text-centered">Abstract</h2>
+  <div class="content abstract-copy"><p>Generated hand–object interaction videos provide a controllable way to propose manipulation motions. <span class="galatea-brand">GALATEA</span> combines generated videos with simulation-based HOI grounding: generated videos provide diverse motion references for learning a multi-object, multi-trajectory HOI tracker, and at deployment, video models produce motion plans executed by the learned tracker. HOI reconstruction with minimal manual intervention yields about 2,000 usable references from 2,500 generated clips; more than 1,500 trajectories are grounded in simulation. In closed-loop real-world experiments, the distilled controller performs functional grasps, non-prehensile manipulation, and post-grasp object-pose tracking.</p></div>
+</div></section>
+
+<section class="section" id="method"><div class="container"><h2 class="title is-2 has-text-centered">Overview of <span class="galatea-brand">GALATEA</span></h2>
+  <div class="columns is-centered overview-stages"><div class="column is-one-third"><div class="academic-card"><span class="tag is-academic">Stage 1</span><h3>Generate &amp; reconstruct</h3><p>Condition a video model on a real first-frame image and language instruction. Recover metric hand–object trajectories with stereo depth, object masks, hand tracking, and joint optimization.</p></div></div><div class="column is-one-third"><div class="academic-card"><span class="tag is-academic">Stage 2</span><h3>Ground in simulation</h3><p>Augment references while preserving contact, then train a tracking-style policy with contact-aware rewards, SAPG, and domain randomization.</p></div></div><div class="column is-one-third"><div class="academic-card"><span class="tag is-academic">Stage 3</span><h3>Distill one controller</h3><p>Distill category experts with behavior cloning and DAgger into a single policy that transfers across objects and unseen trajectories.</p></div></div></div>
+  <figure class="image-figure page-figure"><img class="embedded-figure" loading="lazy" decoding="async" data-src="./figures/galatea_pipeline_overview.jpg" width="7808" height="4694" alt="Overview of the GALATEA pipeline"><figcaption><strong>Overview of <span class="galatea-brand">GALATEA</span>.</strong> Generated videos become HOI references, then executable actions.</figcaption></figure>
+</div></section>
+
+<section class="section" id="highlights"><div class="container"><h2 class="title is-2 has-text-centered" id="ps-heading">Highlights</h2>
+  <article id="pipeline-showcase" class="ps-showcase" aria-labelledby="ps-heading">
+    <div id="ps-panel" class="ps-panel" data-phase="pre" tabindex="0" aria-label="Generated video, hand–object reconstruction and real-world execution">
+      <div class="ps-selector">
+        <div id="ps-samples" class="ps-samples" role="group" aria-label="Choose a generated-video example and its real-world execution"></div>
+        <p id="ps-action" class="ps-action"></p>
+      </div>
+      <div class="ps-hero">
+          <figure class="ps-view ps-input">
+            <figcaption class="ps-view-caption"><button type="button" data-stage="input" aria-label="Enlarge generated video">Generated video <span aria-hidden="true">↗</span></button></figcaption>
+            <div class="ps-input-screen">
+              <video id="ps-video" muted playsinline preload="metadata" aria-label="Generated video, synchronized with the three reconstruction views"></video>
+              <button class="ps-open-view" type="button" data-stage="input" aria-label="Enlarge generated video"><span aria-hidden="true">↗</span></button>
+            </div>
+          </figure>
+        <div class="ps-robot">
+          <figure class="ps-view ps-execution">
+            <figcaption class="ps-view-caption"><button type="button" data-stage="execution" aria-label="Enlarge real-world execution">Real-world execution <span aria-hidden="true">↗</span></button></figcaption>
+            <div class="ps-execution-screen">
+              <video id="ps-execution-video" muted playsinline preload="metadata" aria-label="Real-world execution synchronized to the reference"></video>
+              <button class="ps-open-view" type="button" data-stage="execution" aria-label="Enlarge real-world execution"><span aria-hidden="true">↗</span></button>
+            </div>
+          </figure>
+          <div id="ps-execution-status" class="ps-status" role="status">Loading execution…</div>
+        </div>
+      </div>
+      <div class="ps-reconstruction-group">
+      <div id="ps-stages" class="ps-stages" role="group" aria-label="Depth, segmentation and hand–object reconstruction"></div>
+      <div class="ps-transport">
+        <div class="ps-timeline-heading"><span><strong>HOI-DETR</strong><span>Contact windows</span></span><span id="ps-phase" class="ps-phase" role="status" aria-live="polite">Pre-contact</span></div>
+        <div class="ps-timeline-surface" id="ps-timeline-surface">
+          <div id="ps-segments" class="ps-segments" aria-hidden="true"></div>
+          <div id="ps-cursor" class="ps-cursor" aria-hidden="true"><i></i></div>
+          <input id="ps-scrub" type="range" min="0" max="6.041667" step="any" value="0" aria-label="Synchronized video time" disabled>
+        </div>
+        <div class="ps-legend" aria-label="Contact phases"><span data-phase="pre"><i></i>Pre-contact</span><span data-phase="contact"><i></i>Contact</span><span data-phase="post"><i></i>Post-contact</span></div>
+        <div class="ps-controls" role="group" aria-label="Synchronized playback controls">
+          <button id="ps-play" class="button is-rounded ps-primary" type="button" disabled>Play synchronized</button>
+          <button id="ps-restart-both" class="button is-rounded" type="button" aria-label="Restart synchronized videos" title="Restart" disabled>↺</button>
+          <output id="ps-time">0.00 / 6.04 s</output>
+          <div class="select is-small"><select id="ps-speed" aria-label="Synchronized playback speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option></select></div>
+          <label class="ps-loop"><input id="ps-loop" type="checkbox" checked> Loop</label>
+        </div>
+      </div>
+      </div>
+      <div id="ps-status" class="ps-status" role="status">Loading reconstruction…</div>
+    </div>
+    <noscript><p class="has-text-centered">Enable JavaScript to explore the reconstruction pipeline.</p></noscript>
+    <dialog id="ps-dialog" class="ps-dialog" aria-labelledby="ps-dialog-title">
+      <div class="ps-dialog-heading"><h3 id="ps-dialog-title"></h3><button id="ps-close" class="button is-rounded" type="button" aria-label="Close enlarged reconstruction">×</button></div>
+      <video id="ps-dialog-video" muted playsinline controls controlslist="nodownload"></video>
+      <div class="ps-dialog-footer"><span id="ps-dialog-note"></span></div>
+    </dialog>
+  </article>
+</div></section>
+
+<section class="section" id="figure-4" aria-labelledby="hoi-heading">
+  <div class="container">
+    <h2 class="title is-2 has-text-centered" id="hoi-heading">HOI reconstruction</h2>
+    <figure class="image-figure page-figure"><img class="embedded-figure" loading="lazy" decoding="async" data-src="./figures/hoi_reconstruction_overview.jpg" width="7857" height="2583" alt="HOI reconstruction pipeline"><figcaption><strong>HOI reconstruction.</strong> Metric depth, masks, initial motion, and joint optimization produce refined trajectories.</figcaption></figure>
+    <p class="hoi-intro has-text-centered">Explore selected hand–object reconstruction examples. Choose an object to compare the generated video and method outputs in sync.</p>
+    <div class="hoi-explorer" id="hoi-explorer">
+      <aside class="hoi-directory" aria-label="Object directory">
+        <div class="hoi-directory-heading"><h3>Objects</h3></div>
+        <nav id="hoi-objects" aria-label="Choose an object"></nav>
+      </aside>
+      <div class="hoi-main">
+        <div class="hoi-mobile-picker"><label for="hoi-object-select">Choose an object</label><div class="select is-fullwidth"><select id="hoi-object-select"></select></div></div>
+        <div class="hoi-sample-heading">
+          <div><h3 id="hoi-object-name" class="title is-4">Airplane</h3><p id="hoi-action" class="hoi-action">Grasp &amp; move</p></div>
+          <div class="hoi-object-arrows"><button class="button is-small is-rounded" id="hoi-prev" type="button" aria-label="Previous object">←</button><button class="button is-small is-rounded" id="hoi-next" type="button" aria-label="Next object">→</button></div>
+        </div>
+        <div class="hoi-controls" role="group" aria-label="Synchronized playback controls">
+          <button id="hoi-play" class="button is-rounded hoi-primary" type="button" disabled>Play all</button>
+          <button id="hoi-restart" class="button is-rounded" type="button" aria-label="Restart all videos" title="Restart all videos">↺</button>
+          <input id="hoi-timeline" type="range" min="0" max="5.0417" step="any" value="0" aria-label="Video time in seconds" disabled>
+          <output id="hoi-time">0.00 / 5.04 s</output>
+          <div class="select is-small"><select id="hoi-speed" aria-label="Playback speed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option></select></div>
+          <label class="hoi-loop"><input id="hoi-loop" type="checkbox" checked> Loop</label>
+        </div>
+        <div class="hoi-view-meta"><span id="hoi-status" role="status">Loading comparison…</span><button id="hoi-layout" class="button is-small is-rounded" type="button" aria-pressed="false">Side-by-side view</button></div>
+        <div id="hoi-videos" class="hoi-videos" aria-label="Method comparison"></div>
+        <p class="hoi-view-hint">Click a video to enlarge. Use the shared timeline to compare the same instant.</p>
+      </div>
+    </div>
+    <details class="hoi-selection-note"><summary>About these examples</summary><p>These examples showcase a subset of the objects and interactions in our dataset.</p></details>
+    <noscript><p class="has-text-centered">Enable JavaScript to browse the selected examples.</p></noscript>
+  </div>
+  <dialog id="hoi-dialog" class="hoi-dialog" aria-labelledby="hoi-dialog-title">
+    <div class="hoi-dialog-heading"><h3 id="hoi-dialog-title"></h3><button id="hoi-close" class="button is-rounded" type="button" aria-label="Close enlarged video">×</button></div>
+    <video id="hoi-dialog-video" controls controlslist="nodownload" muted playsinline></video>
+    <div class="hoi-dialog-footer"><span>Individual view</span></div>
+  </dialog>
+</section>
+
+<section class="section" id="experiments">
+  <div class="container">
+    <h2 class="title is-2 has-text-centered">Real-world rollouts</h2>
+    <div class="rollout-reel" aria-labelledby="rollout-reel-title">
+      <header class="rollout-reel__header">
+        <h3 id="rollout-reel-title"><strong>Autonomous</strong> <span aria-hidden="true">-</span> <strong>Closed-loop</strong></h3>
+      </header>
+
+      <div class="rollout-reel__viewport" tabindex="0" aria-label="All 66 real-world rollout videos. Scroll vertically to explore.">
+        <div id="rollout-grid" class="rollout-reel__grid"></div>
+        <noscript><p class="rollout-reel__noscript">Enable JavaScript to browse all 66 physical rollouts.</p></noscript>
+      </div>
+
+      <p class="rollout-reel__hint"><span aria-hidden="true">↓</span> Scroll vertically inside the reel</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="results">
+  <div class="container">
+    <h2 class="title is-2 has-text-centered">RL benchmark</h2>
+    <figure class="image-figure page-figure">
+        <img class="embedded-figure" loading="lazy" decoding="async" data-src="./figures/benchmark_success_rates_extended_preview.png" width="2090" height="1395" alt="Simulation success rates for GALATEA experts, ablations, baselines, and the distilled controller across training objects, unseen trajectories, and novel objects">
+        <figcaption class="content">
+          <p><strong>Simulation success rates.</strong> Black circles, colored circles, and diamonds represent 42 training objects, 10 benchmark objects, and five novel objects; violins show distributions, boxes show interquartile ranges, and hollow circles show means. <span class="galatea-brand">GALATEA</span> experts lead the benchmark at 77.4% mean success, while the distilled controller reaches 54.2% mean success on novel objects without retraining. Higher is better.</p>
+        </figcaption>
+      </figure>
+  </div>
+</section>
+
+<section class="section" id="paper"><div class="container content"><h2 class="title is-2">BibTeX</h2><pre><code>@article{wu2026galatea,
+  title={Grounding Generated Video Plans in Simulation Towards Versatile Dexterous Controllers},
+  author={Wu, Tianyue and An, Boyuan and Zhao, Shuqi and Guo, Heyu and Xing, Wanli and Ma, Yi and Zhang, Kaifeng and Wu, Ruihai and Tomizuka, Masayoshi},
+  journal={arXiv preprint arXiv:2609.10050},
+  year={2026}
+}</code></pre></div></section>
+<footer class="footer"><div class="container"><div class="content has-text-centered"><p><span class="galatea-brand">GALATEA</span> · Grounding generated video plans in simulation towards versatile dexterous controllers.</p><p>Academic project page template adapted from <a href="https://nerfies.github.io/" target="_blank" rel="noopener noreferrer">Nerfies</a> and <a href="https://hover-versatile-humanoid.github.io/" target="_blank" rel="noopener noreferrer">HOVER</a>.</p></div></div></footer>
+</body></html>

@@ -1,0 +1,8 @@
+/* Reuse the cover wordmark's type and Berkeley-blue accent wherever GALATEA is shown. */
+.galatea-cover { --cover-blue: #3b7ea1; }
+.galatea-brand {
+  color: #3b7ea1;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  letter-spacing: -.055em;
+}
