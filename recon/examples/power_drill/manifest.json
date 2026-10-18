@@ -1,0 +1,28 @@
+{
+  "name": "power_drill",
+  "description": "Generated right-hand grasp, lift, tilt and forward/backward motion of a rigid power drill.",
+  "frames": 169,
+  "fps": 24,
+  "duration_seconds": 7.041666666666667,
+  "video_resolution": [
+    648,
+    496
+  ],
+  "calibration_resolution": [
+    636,
+    480
+  ],
+  "input_mode": "provided_calibration",
+  "contact_mode": "hoidetr-auto",
+  "mesh_units": "meters",
+  "mesh_faces": 5000,
+  "mesh_source": "YCB 035_power_drill; simplified and scaled to match the project physical prop",
+  "sha256": {
+    "rgb.png": "740282afacffeabb244b5a7620bdba136117f035c7f4233c6390157b0296402b",
+    "video.mp4": "96443aab7ce5bcf436a0b87202e71df195b1ff6774d88581891982623482ef1d",
+    "cam_intrinsics.txt": "eb1568eea55774358fb2baf63abf78cd838185a464210af6d9ef91d49012006d",
+    "depth.png": "65f6d92b89f23874ad53b48ad2e6de020f3265919b67edf41579e76535e833a7",
+    "object.obj": "a93407197c3df3769f7e944585ef055c05bcdff45571b96eb7576c168d93bad9"
+  },
+  "mesh_watertight": true
+}

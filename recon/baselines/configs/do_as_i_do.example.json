@@ -1,0 +1,13 @@
+{
+  "method": "do_as_i_do",
+  "repo": "../../third_party/do-as-i-do",
+  "adapter_python": [
+    "/path/to/adapter-env/bin/python"
+  ],
+  "env": {
+    "ENV_SAM3": "sam3",
+    "ENV_SAM3D": "sam3d",
+    "ENV_HAWOR": "hawor",
+    "ENV_TAPNET": "tapnet"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "clips": [
+    {
+      "clip_id": "my_clip",
+      "video": "/path/to/video.mp4",
+      "mesh": "/path/to/object_in_metres.obj",
+      "object_name": "power drill",
+      "intrinsics": "/path/to/cam_intrinsics.txt",
+      "point": [
+        320,
+        240
+      ],
+      "hand_side": "right"
+    }
+  ]
+}

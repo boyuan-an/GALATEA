@@ -1,0 +1,1067 @@
+diff --git a/egoinfinity/pipeline/config.py b/egoinfinity/pipeline/config.py
+--- a/egoinfinity/pipeline/config.py
++++ b/egoinfinity/pipeline/config.py
+@@ -32,7 +32,7 @@
+ RESCALE_FACTOR  = 2.0      # bbox rescale for WiLoR crop
+ 
+ # ── MoGe-2 ───────────────────────────────────────────────────────
+-MOGE2_MODEL = 'Ruicheng/moge-2-vitl'
++MOGE2_MODEL = os.environ.get('MOGE2_MODEL', 'Ruicheng/moge-2-vitl')
+ 
+ # ── SAM2 ──────────────────────────────────────────────────────────
+ SAM2_DIR = os.path.join(REPO_ROOT, 'third_party', 'sam2')
+diff --git a/egoinfinity/pipeline/object_tracker.py b/egoinfinity/pipeline/object_tracker.py
+--- a/egoinfinity/pipeline/object_tracker.py
++++ b/egoinfinity/pipeline/object_tracker.py
+@@ -468,6 +468,7 @@
+     def init_track(self, frame_rgb: np.ndarray,
+                    bbox: Optional[List[float]] = None,
+                    point: Optional[List[float]] = None,
++                   mask: Optional[np.ndarray] = None,
+                    obj_id: int = 1) -> np.ndarray:
+         """Initialize tracking for one object on first frame.
+ 
+@@ -478,6 +479,7 @@
+             frame_rgb: (H, W, 3) RGB uint8 image
+             bbox: [x1, y1, x2, y2] bounding box
+             point: [x, y] foreground point
++            mask: (H, W) binary mask used as an exact SAM2 conditioning prompt
+             obj_id: object ID for multi-object tracking
+ 
+         Returns:
+@@ -486,7 +488,22 @@
+         if not self.initialized:
+             self.predictor.load_first_frame(frame_rgb)
+ 
+-        if bbox is not None:
++        supplied = sum(value is not None for value in (bbox, point, mask))
++        if supplied != 1:
++            raise ValueError("Provide exactly one of bbox, point, or mask")
++
++        if mask is not None:
++            mask_arr = np.asarray(mask).astype(bool)
++            if mask_arr.shape != frame_rgb.shape[:2]:
++                raise ValueError(
++                    f"mask shape {mask_arr.shape} does not match frame "
++                    f"shape {frame_rgb.shape[:2]}"
++                )
++            if not mask_arr.any():
++                raise ValueError("mask must contain at least one foreground pixel")
++            _, _, masks = self.predictor.add_new_mask(
++                frame_idx=0, obj_id=obj_id, mask=mask_arr)
++        elif bbox is not None:
+             x1, y1, x2, y2 = bbox[:4]
+             bbox_arr = np.array([[x1, y1], [x2, y2]], dtype=np.float32)
+             _, _, masks = self.predictor.add_new_prompt(
+@@ -497,7 +514,7 @@
+             _, _, masks = self.predictor.add_new_prompt(
+                 frame_idx=0, obj_id=obj_id, points=points, labels=labels)
+         else:
+-            raise ValueError("Must provide either bbox or point")
++            raise AssertionError("unreachable prompt type")
+ 
+         mask = (masks[0] > 0.0).squeeze().cpu().numpy().astype(bool)
+         self.smoothers[obj_id] = OBBSmoother()
+diff --git a/egoinfinity/pipeline/pose_tracker/contact.py b/egoinfinity/pipeline/pose_tracker/contact.py
+--- a/egoinfinity/pipeline/pose_tracker/contact.py
++++ b/egoinfinity/pipeline/pose_tracker/contact.py
+@@ -16,6 +16,9 @@
+ from __future__ import annotations
+ 
+ import logging
++import os
++import time
++from concurrent.futures import ThreadPoolExecutor
+ from typing import List, Optional, Sequence
+ 
+ import numpy as np
+@@ -123,21 +126,56 @@
+     T = len(hand_verts_per_frame)
+     raw = np.zeros((T, 2), dtype=np.float32)   # 0 = left, 1 = right
+ 
+-    for t in range(T):
++    def _detect_frame(t: int):
++        frame_raw = np.zeros(2, dtype=np.float32)
+         verts_list = hand_verts_per_frame[t] or []
+         is_right_list = hand_is_right_per_frame[t] or []
+         if len(verts_list) != len(is_right_list):
+             # bad frame metadata — skip
+-            continue
++            return t, frame_raw
+         mesh_w = mesh_world_per_frame[t]
+         if mesh_w is None or len(mesh_w) == 0:
+-            continue
++            return t, frame_raw
+         for h_verts, is_right in zip(verts_list, is_right_list):
+             d = _hand_to_mesh_min_dist(h_verts, mesh_w)
+             col = 1 if is_right else 0
+             if d < threshold_m:
+                 # Multiple WiLoR detections of same hand can occur — take max
+-                raw[t, col] = 1.0
++                frame_raw[col] = 1.0
++        return t, frame_raw
++
++    try:
++        requested_workers = int(os.environ.get("EGOINFINITY_CONTACT_WORKERS", "1"))
++    except ValueError:
++        requested_workers = 1
++    worker_count = max(1, min(T, requested_workers))
++    diagnostics = os.environ.get("EGOINFINITY_CONTACT_DIAGNOSTICS") == "1"
++    started = time.perf_counter()
++    if diagnostics:
++        mesh_points = max((len(m) for m in mesh_world_per_frame if m is not None), default=0)
++        print(
++            f"CONTACT_DIAG| frames={T} max_mesh_points={mesh_points} workers={worker_count}",
++            flush=True,
++        )
++
++    if worker_count == 1:
++        results = map(_detect_frame, range(T))
++    else:
++        executor = ThreadPoolExecutor(max_workers=worker_count)
++        results = executor.map(_detect_frame, range(T))
++
++    try:
++        for completed, (t, frame_raw) in enumerate(results, 1):
++            raw[t] = frame_raw
++            if diagnostics and (completed == 1 or completed % 10 == 0 or completed == T):
++                print(
++                    f"CONTACT_DIAG| completed={completed}/{T} "
++                    f"elapsed={time.perf_counter() - started:.1f}s",
++                    flush=True,
++                )
++    finally:
++        if worker_count != 1:
++            executor.shutdown(wait=True)
+ 
+     # SavGol along time axis to soften 0/1 jitter at contact boundaries
+     if T >= ramp_window:
+diff --git a/egoinfinity/pipeline/pose_tracker/flow_pnp.py b/egoinfinity/pipeline/pose_tracker/flow_pnp.py
+--- a/egoinfinity/pipeline/pose_tracker/flow_pnp.py
++++ b/egoinfinity/pipeline/pose_tracker/flow_pnp.py
+@@ -21,6 +21,8 @@ SE(3) interpolation between nearest trusted neighbors.
+ from __future__ import annotations
+ 
+ import logging
++import os
++import time
+ from dataclasses import dataclass
+ from typing import List, Optional, Sequence, Tuple
+ 
+@@ -32,6 +34,11 @@ from .utils import project_points
+ log = logging.getLogger("pose_tracker.flow_pnp")
+ 
+ 
++def _flow_diag(message: str) -> None:
++    if os.environ.get("EGOINFINITY_FLOW_DIAGNOSTICS") == "1":
++        print(f"FLOW_DIAG| {message}", flush=True)
++
++
+ # ---------------------------------------------------------------------------
+ # Optical flow — MEMFOF (deep, GPU)
+ # ---------------------------------------------------------------------------
+@@ -127,6 +134,7 @@ def propagate(
+     seed: int = 0,
+ ) -> PropagationResult:
+     """Single-step pose propagation t -> t' via optical flow + RANSAC-PnP."""
++    step_started = time.perf_counter()
+     H, W = img_t.shape[:2]
+     # 1. sub-sample mesh (deterministic)
+     if len(mesh_pts) > n_mesh_sample:
+@@ -138,12 +146,15 @@ def propagate(
+ 
+     # 2. visibility at t
+     X_vis, u_t = _filter_visible(X_all, T_curr, K, H, W, mask_t, hand_mask_t)
++    _flow_diag(f"visible={len(X_vis)} elapsed={time.perf_counter() - step_started:.3f}s")
+     if len(X_vis) < min_correspondences:
+         return PropagationResult(None, len(X_vis), 0, 0.0,
+                                   f"too few visible at t ({len(X_vis)})")
+ 
+     # 3. optical flow t -> t+1, sample at u_t
++    flow_started = time.perf_counter()
+     flow = compute_flow(flow_engine, img_t, img_tnext)     # (H, W, 2)
++    _flow_diag(f"flow_done elapsed={time.perf_counter() - flow_started:.3f}s")
+     u_int = u_t.astype(np.int32)
+     du = flow[u_int[:, 1], u_int[:, 0]]
+     mag = np.linalg.norm(du, axis=1)
+@@ -164,6 +175,10 @@ def propagate(
+         X_vis, u_next = X_vis[~h], u_next[~h]
+ 
+     n_corr = len(X_vis)
++    _flow_diag(
++        f"correspondences={n_corr} finite_X={bool(np.isfinite(X_vis).all())} "
++        f"finite_uv={bool(np.isfinite(u_next).all())}"
++    )
+     if n_corr < min_correspondences:
+         return PropagationResult(None, n_corr, 0, 0.0,
+                                   f"too few correspondences ({n_corr})")
+@@ -175,12 +190,17 @@ def propagate(
+     rvec0, _ = cv2.Rodrigues(T_curr[:3, :3])
+     tvec0 = T_curr[:3, 3:4]
+     try:
++        ransac_started = time.perf_counter()
+         ok, rvec, tvec, inliers = cv2.solvePnPRansac(
+             X_pnp, u_pnp, K.astype(np.float64), None,
+             rvec=rvec0.astype(np.float64), tvec=tvec0.astype(np.float64),
+             useExtrinsicGuess=True,
+             iterationsCount=200, reprojectionError=reproj_thresh,
+             confidence=0.99, flags=cv2.SOLVEPNP_ITERATIVE)
++        _flow_diag(
++            f"ransac_done elapsed={time.perf_counter() - ransac_started:.3f}s "
++            f"ok={ok} inliers={0 if inliers is None else len(inliers)}"
++        )
+     except cv2.error as e:
+         return PropagationResult(None, n_corr, 0, 0.0, f"solvePnPRansac error: {e}")
+     if not ok or inliers is None or len(inliers) < min_inliers:
+@@ -192,8 +212,10 @@ def propagate(
+     inlier_idx = inliers.flatten()
+     X_in = X_vis[inlier_idx].astype(np.float64).reshape(-1, 1, 3)
+     u_in = u_next[inlier_idx].astype(np.float64).reshape(-1, 1, 2)
++    refine_started = time.perf_counter()
+     rvec_r, tvec_r = cv2.solvePnPRefineLM(
+         X_in, u_in, K.astype(np.float64), None, rvec, tvec)
++    _flow_diag(f"refine_done elapsed={time.perf_counter() - refine_started:.3f}s")
+     R_new, _ = cv2.Rodrigues(rvec_r)
+     T_new = np.eye(4)
+     T_new[:3, :3] = R_new
+@@ -297,6 +319,7 @@ def track_6dof(
+     def _step(t_from: int, t_to: int):
+         if T_seq[t_from] is None:
+             return
++        _flow_diag(f"step_start {t_from}->{t_to}")
+         res = propagate(
+             T_seq[t_from], mesh_pts,
+             frames_rgb[t_from], frames_rgb[t_to],
+@@ -314,6 +337,10 @@ def track_6dof(
+         inlier_ratios[t_to] = res.inlier_ratio
+         n_corr[t_to] = res.n_corr
+         fail[t_to] = res.fail_reason
++        _flow_diag(
++            f"step_done {t_from}->{t_to} propagated={res.T_next is not None} "
++            f"reason={res.fail_reason!r}"
++        )
+ 
+     # forward
+     for t in range(anchor_idx, total - 1):
+diff --git a/egoinfinity/pipeline/pose_tracker/memfof_flow.py b/egoinfinity/pipeline/pose_tracker/memfof_flow.py
+--- a/egoinfinity/pipeline/pose_tracker/memfof_flow.py
++++ b/egoinfinity/pipeline/pose_tracker/memfof_flow.py
+@@ -29,7 +29,7 @@
+ 
+ log = logging.getLogger("pose_tracker.memfof_flow")
+ 
+-DEFAULT_CKPT = "egorchistov/optical-flow-MEMFOF-Tartan-T-TSKH"
++DEFAULT_CKPT = os.environ.get("MEMFOF_CHECKPOINT", "egorchistov/optical-flow-MEMFOF-Tartan-T-TSKH")
+ 
+ 
+ class MEMFOFFlowEngine:
+diff --git a/egoinfinity/pipeline/pose_tracker/trust_filter.py b/egoinfinity/pipeline/pose_tracker/trust_filter.py
+--- a/egoinfinity/pipeline/pose_tracker/trust_filter.py
++++ b/egoinfinity/pipeline/pose_tracker/trust_filter.py
+@@ -15,6 +15,9 @@ array as a per-frame weight and the obs cloud per-frame as the L_fit target.
+ from __future__ import annotations
+ 
+ import logging
++import os
++import time
++from concurrent.futures import ThreadPoolExecutor
+ from dataclasses import dataclass
+ from typing import List, Optional, Sequence
+ 
+@@ -143,10 +146,10 @@ def evaluate_trust(
+     obs_arr: List[Optional[np.ndarray]] = [None] * n
+     trust_arr: List[bool] = [False] * n
+ 
+-    for i in range(n):
++    def _evaluate_frame(i: int):
+         m_i = masks[i]
+         if m_i is None or not m_i.any():
+-            continue
++            return i, float('nan'), float('inf'), 0.0, None, False
+         H, W = m_i.shape
+         h_i = hand_masks[i] if hand_masks is not None else None
+ 
+@@ -155,22 +158,55 @@ def evaluate_trust(
+             ir = float(inlier_ratios[i])
+         else:
+             ir = 0.0
+-        ir_arr[i] = ir
+-
+         # Signal 1: mask IoU
+         T_i = np.asarray(T_seq[i], dtype=np.float64)
+         rendered = render_mesh_mask(mesh_pts, T_i, K, H, W)
+         iou = mask_iou(rendered, m_i, h_i)
+-        iou_arr[i] = iou
+ 
+         # Signal 2: partial Chamfer
+         obs = _make_anchor_pointcloud(depth_maps[i], m_i, h_i, K)
+-        obs_arr[i] = obs if len(obs) >= 50 else None
+-        cham = chamfer_partial(mesh_pts, T_i, obs_arr[i])
+-        cham_arr[i] = cham
++        obs_out = obs if len(obs) >= 50 else None
++        cham = chamfer_partial(mesh_pts, T_i, obs_out)
+ 
+         # Triple AND
+-        trust_arr[i] = (iou >= iou_thr) and (cham <= chamfer_thr_m) and (ir >= ir_thr)
++        trusted = (iou >= iou_thr) and (cham <= chamfer_thr_m) and (ir >= ir_thr)
++        return i, iou, cham, ir, obs_out, trusted
++
++    try:
++        requested_workers = int(os.environ.get("EGOINFINITY_TRUST_WORKERS", "1"))
++    except ValueError:
++        requested_workers = 1
++    worker_count = max(1, min(n, requested_workers))
++    diagnostics = os.environ.get("EGOINFINITY_TRUST_DIAGNOSTICS") == "1"
++    started = time.perf_counter()
++    if diagnostics:
++        print(
++            f"TRUST_DIAG| frames={n} mesh_points={len(mesh_pts)} workers={worker_count}",
++            flush=True,
++        )
++
++    def _consume(results) -> None:
++        for completed, result in enumerate(results, 1):
++            i, iou, cham, ir, obs, trusted = result
++            iou_arr[i] = iou
++            cham_arr[i] = cham
++            ir_arr[i] = ir
++            obs_arr[i] = obs
++            trust_arr[i] = trusted
++            if diagnostics and (completed == 1 or completed % 10 == 0 or completed == n):
++                print(
++                    f"TRUST_DIAG| completed={completed}/{n} "
++                    f"elapsed={time.perf_counter() - started:.1f}s",
++                    flush=True,
++                )
++
++    if worker_count == 1:
++        _consume(map(_evaluate_frame, range(n)))
++    else:
++        from threadpoolctl import threadpool_limits
++        with threadpool_limits(limits=1, user_api="blas"):
++            with ThreadPoolExecutor(max_workers=worker_count) as executor:
++                _consume(executor.map(_evaluate_frame, range(n)))
+ 
+     n_trusted = int(sum(trust_arr))
+     return TrustResult(
+diff --git a/egoinfinity/pipeline/post_tracking/bake_fp_pose.py b/egoinfinity/pipeline/post_tracking/bake_fp_pose.py
+--- a/egoinfinity/pipeline/post_tracking/bake_fp_pose.py
++++ b/egoinfinity/pipeline/post_tracking/bake_fp_pose.py
+@@ -184,6 +184,7 @@ def _process_clip(fav_dir: Path, fp_root: Path,
+                    dry_run: bool, skip_if_done: bool, force: bool,
+                    toggles: dict) -> tuple[str, str, dict]:
+     """Process one favorite clip. Returns (status, action, stats)."""
++    started_monotonic = time.monotonic()
+     pkl_path = fav_dir / "pipeline_result.pkl.gz"
+     if not pkl_path.is_file():
+         return "skip", "no pkl", {}
+@@ -278,57 +279,9 @@ def _process_clip(fav_dir: Path, fp_root: Path,
+                 r_change_maxes.append(float(angs_static.max()))
+                 per_oid_log.append(
+                     f"oid{oid}=Δ{angs_static.mean():.0f}°[static_global]")
+-                # ★ Lock translation to median of per-frame PCA-MAD pts
+-                # centroid (= the exact signal the viser OBB wireframe uses).
+-                # Fallbacks: median(pose_t) if pts unavailable,
+-                # then median(input T_seq.t) if both missing.
+-                #
+-                # Why not pose_t directly: sam3_obj_data.pose_t is bbox
+-                # center (min+max)/2 which is sensitive to depth-noise
+-                # outliers (e.g. strainer has obb_center.z=1.87 but
+-                # PCA-MAD center.z=2.04, where the actual visible point
+-                # cloud lives). Across 106 clips: 92% of static stretches
+-                # have |pose_t - pca_center| > 10mm, 54% > 50mm, 10% > 200mm.
+-                pca_list = []
+-                pose_t_list = []
+-                T_seq_n = T_seq.shape[0]
+-                fd_data = data.get("frame_data") or []
+-                for t in range(min(T_seq_n, len(fd_data))):
+-                    sd = fd_data[t].get("sam3_obj_data") or {}
+-                    od_ = sd.get(oid)
+-                    if od_ is None:
+-                        od_ = sd.get(int(oid)) if not isinstance(oid, int) else None
+-                    if not isinstance(od_, dict):
+-                        continue
+-                    # Compute pts inline (bake does NOT rehydrate pkl, so the
+-                    # standard od_['pts'] field is absent).
+-                    pts = _compute_pts_inline(
+-                        od_, fd_data[t], dp_focal, cx_img, cy_img,
+-                        frame_key=(fav_dir.name, t))
+-                    c = _pts_pca_center(pts)
+-                    if c is not None and np.all(np.isfinite(c)):
+-                        pca_list.append(c.astype(np.float32))
+-                    pt = od_.get("pose_t")
+-                    if pt is not None:
+-                        pt = np.asarray(pt, dtype=np.float32)
+-                        if pt.shape == (3,) and np.all(np.isfinite(pt)):
+-                            pose_t_list.append(pt)
+-                if pca_list:
+-                    t_static = np.median(np.stack(pca_list), axis=0)
+-                elif pose_t_list:
+-                    t_static = np.median(np.stack(pose_t_list), axis=0)
+-                else:
+-                    # Last-resort fallback (median of input T_seq.t)
+-                    t_seq_old = T_seq[:, :3, 3]
+-                    t_finite = np.isfinite(t_seq_old).all(axis=1)
+-                    if t_finite.any():
+-                        t_static = np.median(t_seq_old[t_finite], axis=0)
+-                    else:
+-                        t_static = np.zeros(3, dtype=np.float32)
+                 if not dry_run:
+                     T_seq_new = T_seq.copy()
+                     T_seq_new[:, :3, :3] = new_R_static
+-                    T_seq_new[:, :3, 3] = t_static.astype(T_seq_new.dtype)
+                     info["T_seq"] = T_seq_new
+                 n_baked += 1
+                 continue
+@@ -506,6 +459,7 @@ def _process_clip(fav_dir: Path, fp_root: Path,
+             "toggles": toggles,
+             "n_oid_baked": n_baked,
+             "n_oid_missing": n_missing,
++            "elapsed_seconds": time.monotonic() - started_monotonic,
+             "r_change_deg_mean": float(np.mean(r_change_means)) if r_change_means else 0.0,
+             "r_change_deg_max": float(np.max(r_change_maxes)) if r_change_maxes else 0.0,
+         })
+diff --git a/egoinfinity/pipeline/sam3d_client.py b/egoinfinity/pipeline/sam3d_client.py
+--- a/egoinfinity/pipeline/sam3d_client.py
++++ b/egoinfinity/pipeline/sam3d_client.py
+@@ -13,6 +13,7 @@ Usage (from pipeline subprocess)::
+         rgb=image_uint8_HxWx3,
+         mask=bool_mask_HxW,
+         out_ply_path="/path/obj_0.ply",
++        out_mesh_path="/path/obj_0_surface.glb",
+         seed=42, quality="tier1",
+     )
+     # res.ply_path, res.translation (3,), res.rotation_quat (4,), res.scale (float)
+@@ -32,6 +33,7 @@ import numpy as np
+ @dataclass
+ class Sam3dResult:
+     ply_path: str
++    mesh_path: Optional[str]
+     translation: np.ndarray        # (3,) float32
+     rotation_quat: np.ndarray      # (4,) float32  [w, x, y, z]
+     scale: float                   # uniform
+@@ -81,6 +83,7 @@ def reconstruct_object(
+     rgb: np.ndarray,
+     mask: np.ndarray,
+     out_ply_path: str,
++    out_mesh_path: Optional[str] = None,
+     seed: int = 42,
+     quality: str = "tier1",
+     timeout: float = 300.0,
+@@ -110,6 +113,8 @@ def reconstruct_object(
+             'seed': seed,
+             'quality': quality,
+         }
++        if out_mesh_path:
++            req['out_mesh_path'] = out_mesh_path
+         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+             s.settimeout(timeout)
+             s.connect(sock_path)
+@@ -130,6 +135,7 @@ def reconstruct_object(
+             raise RuntimeError(f"sam3d_worker error: {resp.get('msg')}")
+         return Sam3dResult(
+             ply_path=resp['ply_path'],
++            mesh_path=resp.get('mesh_path'),
+             translation=np.asarray(resp['translation'], dtype=np.float32).reshape(-1),
+             rotation_quat=np.asarray(resp['rotation'], dtype=np.float32).reshape(-1),
+             scale=float(np.asarray(resp['scale'], dtype=np.float32).reshape(-1)[0]),
+diff --git a/egoinfinity/pipeline/sam3d_runner.py b/egoinfinity/pipeline/sam3d_runner.py
+--- a/egoinfinity/pipeline/sam3d_runner.py
++++ b/egoinfinity/pipeline/sam3d_runner.py
+@@ -48,7 +48,10 @@
+ 
+ # Shared per-user socket path so workers spawned by either the orchestrator
+ # or a long-running curation app land on the same address.
+-SAM3D_WORKER_SOCKET = f"/tmp/egoinfinity_sam3d_{os.environ.get('USER', 'user')}.sock"
++SAM3D_WORKER_SOCKET = os.environ.get(
++    "SAM3D_WORKER_SOCKET",
++    f"/tmp/egoinfinity_sam3d_{os.environ.get('USER', 'user')}.sock",
++)
+ 
+ 
+ def _detect_sam3d_python() -> str:
+@@ -118,6 +121,10 @@
+         "PATH": f"{sam3d_bin_dir}:/usr/bin:/bin",
+         "HOME": os.environ["HOME"],
+         "HF_HOME": os.environ.get("HF_HOME", os.path.expanduser("~/.cache/huggingface")),
++        "TORCH_HOME": os.environ.get("TORCH_HOME", os.path.expanduser("~/.cache/torch")),
++        "DINO_REPO": os.environ.get("DINO_REPO", ""),
++        "HF_HUB_OFFLINE": os.environ.get("HF_HUB_OFFLINE", "1"),
++        "TRANSFORMERS_OFFLINE": os.environ.get("TRANSFORMERS_OFFLINE", "1"),
+         "CUDA_VISIBLE_DEVICES": os.environ.get("CUDA_VISIBLE_DEVICES", "0"),
+         "CONDA_PREFIX": os.path.dirname(sam3d_bin_dir),
+         # Reduce CUDA memory fragmentation — SAM3D allocates / frees ~10 GB
+diff --git a/egoinfinity/stages/extract_frames.py b/egoinfinity/stages/extract_frames.py
+--- a/egoinfinity/stages/extract_frames.py
++++ b/egoinfinity/stages/extract_frames.py
+@@ -70,10 +70,12 @@ class ExtractFramesStage(Stage):
+         if end is not None:
+             duration = float(end) - start
+             cmd += ["-t", f"{duration:.3f}"]
+-        cmd += ["-i", str(video_path),
+-                "-vf", f"fps={fps}",
+-                "-q:v", "2",
+-                str(frames_dir / "%06d.jpg")]
++        cmd += ["-i", str(video_path)]
++        if manifest.get("preserve_source_frames", False):
++            cmd += ["-vsync", "0", "-start_number", "0"]
++        else:
++            cmd += ["-vf", f"fps={fps}"]
++        cmd += ["-q:v", "2", str(frames_dir / "%06d.jpg")]
+         ctx.log.info("running: %s", " ".join(cmd))
+         subprocess.run(cmd, check=True)
+         n_frames = len(list(frames_dir.glob("*.jpg")))
+diff --git a/scripts/exo_pipeline.py b/scripts/exo_pipeline.py
+--- a/scripts/exo_pipeline.py
++++ b/scripts/exo_pipeline.py
+@@ -101,6 +101,7 @@ def save_cache(cache_dir, state):
+         'cy': state.get('cy'),
+         'sam3_prompts': state.get('sam3_prompts', []),
+         'sam3_prompt_mapping': state.get('sam3_prompt_mapping', []),
++        'sam3_init_provenance': state.get('sam3_init_provenance'),
+         'sam3_mesh_info': state.get('sam3_mesh_info', {}),
+         'pose_track_info': state.get('pose_track_info', {}),
+         'gravity_up': state.get('gravity_up'),
+@@ -275,6 +276,7 @@ def main():
+             'cy': cached.get('cy', H / 2.0),
+             'sam3_prompts': cached.get('sam3_prompts', []),
+             'sam3_prompt_mapping': cached.get('sam3_prompt_mapping', []),
++            'sam3_init_provenance': cached.get('sam3_init_provenance'),
+             'sam3_mesh_info': cached.get('sam3_mesh_info', {}),
+             'pose_track_info': cached.get('pose_track_info', {}),
+             'gravity_up': cached.get('gravity_up'),
+@@ -1639,6 +1641,43 @@ def main():
+         if args.sam3_prompts:
+             sam3_prompts = [p.strip() for p in args.sam3_prompts.split(",") if p.strip()]
+ 
++        _reviewed_init_mask = None
++        _reviewed_init_path = None
++        _reviewed_mask_root = os.environ.get(
++            'EGOINFINITY_REVIEWED_FRAME0_MASK_ROOT', '').strip()
++        if _reviewed_mask_root:
++            if not args.cache_dir:
++                raise RuntimeError(
++                    'EGOINFINITY_REVIEWED_FRAME0_MASK_ROOT requires --cache-dir')
++            _clip_id = os.path.basename(os.path.abspath(args.cache_dir))
++            _reviewed_init_path = os.path.join(
++                _reviewed_mask_root, f'{_clip_id}.npz')
++            if not os.path.isfile(_reviewed_init_path):
++                raise FileNotFoundError(
++                    f'reviewed frame-0 mask missing: {_reviewed_init_path}')
++            with np.load(_reviewed_init_path, allow_pickle=False) as _mask_archive:
++                if 'mask' not in _mask_archive.files:
++                    raise RuntimeError(
++                        f"reviewed mask archive lacks 'mask': {_reviewed_init_path}")
++                _reviewed_init_mask = np.asarray(
++                    _mask_archive['mask']).astype(bool)
++            if _reviewed_init_mask.shape != frames_rgb[0].shape[:2]:
++                raise RuntimeError(
++                    f'reviewed mask shape {_reviewed_init_mask.shape} does not '
++                    f'match frame-0 shape {frames_rgb[0].shape[:2]}')
++            if not _reviewed_init_mask.any():
++                raise RuntimeError(
++                    f'reviewed frame-0 mask is empty: {_reviewed_init_path}')
++            if not sam3_prompts:
++                sam3_prompts = ['human-reviewed object']
++            state['sam3_init_provenance'] = {
++                'mode': 'human_reviewed_frame0_mask_sam2_tracking',
++                'frame': 0,
++                'mask_path': os.path.abspath(_reviewed_init_path),
++                'mask_area': int(_reviewed_init_mask.sum()),
++                'later_frames': 'EgoInfinity SAM2 predictions',
++            }
++
+         sam3_obj_states_multi = [{} for _ in range(total)]
+         state['sam3_prompts'] = sam3_prompts  # save for viser/cache display
+ 
+@@ -1669,6 +1708,25 @@ def main():
+             from egoinfinity.pipeline.sam3_client import run_sam3_detect, nms_sam3_masks, containment_merge
+             from egoinfinity.pipeline.object_tracker import ObjectTracker as _OT, ObjectState as _OS
+ 
++            if _reviewed_init_mask is not None:
++                from egoinfinity.pipeline.sam3_client import Sam3Mask
++                _ys, _xs = np.where(_reviewed_init_mask)
++                _reviewed_box = [
++                    float(_xs.min()), float(_ys.min()),
++                    float(_xs.max() + 1), float(_ys.max() + 1),
++                ]
++                sam3_init_frame = 0
++                sam3_results = [Sam3Mask(
++                    prompt=sam3_prompts[0],
++                    mask=_reviewed_init_mask,
++                    box=_reviewed_box,
++                    score=1.0,
++                    area=int(_reviewed_init_mask.sum()),
++                )]
++                progress(
++                    'Phase D-sam3: bypassed text detection with human-reviewed '
++                    f'frame-0 mask (area={int(_reviewed_init_mask.sum())})')
++
+             # Pick init frame: score every frame by (a) how static the scene
+             # is and (b) how little of the image the hands occupy.  Highest
+             # score = the cleanest "rest" view available.  Among frames within
+@@ -1681,46 +1739,43 @@ def main():
+             #     frame still wins.  Pose tracking is rigid-hand-bound on
+             #     every frame anyway, so canonical orientation matters less
+             #     here (mesh quality is the only thing that can suffer).
+-            _H, _W = frames_rgb[0].shape[:2]
+-            _total_px = float(_H * _W)
+-            _static_ratio = np.zeros(total, dtype=np.float32)
+-            for _i in range(total):
+-                _fm = flow_masks[_i] if _i < len(flow_masks) else None
+-                if _fm is None or _fm.size == 0:
+-                    _static_ratio[_i] = 1.0
++            if _reviewed_init_mask is None:
++                _H, _W = frames_rgb[0].shape[:2]
++                _total_px = float(_H * _W)
++                _static_ratio = np.zeros(total, dtype=np.float32)
++                for _i in range(total):
++                    _fm = flow_masks[_i] if _i < len(flow_masks) else None
++                    if _fm is None or _fm.size == 0:
++                        _static_ratio[_i] = 1.0
++                    else:
++                        _static_ratio[_i] = 1.0 - float(_fm.sum()) / _total_px
++                _hand_area = np.zeros(total, dtype=np.float32)
++                for _i in range(total):
++                    for _h in (hand_results_per_frame[_i] or []):
++                        if _h.bbox is None:
++                            continue
++                        _x0, _y0, _x1, _y1 = [float(_v) for _v in _h.bbox]
++                        _hand_area[_i] += max(0.0, _x1 - _x0) * max(0.0, _y1 - _y0)
++                _hand_area_norm = _hand_area / max(_total_px, 1.0)
++                _hand_score = 1.0 - np.clip(_hand_area_norm * 4.0, 0.0, 1.0)
++                _score = _static_ratio * _hand_score
++                _max_score = float(_score.max()) if _score.size else 0.0
++                if _max_score > 0.0:
++                    _near_best = np.where(_score >= 0.95 * _max_score)[0]
++                    sam3_init_frame = int(_near_best[0])
+                 else:
+-                    _static_ratio[_i] = 1.0 - float(_fm.sum()) / _total_px
+-            _hand_area = np.zeros(total, dtype=np.float32)
+-            for _i in range(total):
+-                for _h in (hand_results_per_frame[_i] or []):
+-                    if _h.bbox is None:
+-                        continue
+-                    _x0, _y0, _x1, _y1 = [float(_v) for _v in _h.bbox]
+-                    _hand_area[_i] += max(0.0, _x1 - _x0) * max(0.0, _y1 - _y0)
+-            _hand_area_norm = _hand_area / max(_total_px, 1.0)
+-            _hand_score = 1.0 - np.clip(_hand_area_norm * 4.0, 0.0, 1.0)
+-            _score = _static_ratio * _hand_score
+-            _max_score = float(_score.max()) if _score.size else 0.0
+-            if _max_score > 0.0:
+-                # Pick earliest within 95% of max.  When max is high (≥0.85
+-                # static), this lands on the rest segment.  When max is low
+-                # (busy clip), it still grabs the calmest cluster.
+-                _near_best = np.where(_score >= 0.95 * _max_score)[0]
+-                sam3_init_frame = int(_near_best[0])
+-            else:
+-                # Degenerate (no usable signal at all): fall back to old logic.
+-                _hand_frames = [i for i in range(total)
+-                                if hand_results_per_frame[i]]
+-                sam3_init_frame = (
+-                    _hand_frames[len(_hand_frames) // 2] if _hand_frames
+-                    else total // 2
++                    _hand_frames = [i for i in range(total)
++                                    if hand_results_per_frame[i]]
++                    sam3_init_frame = (
++                        _hand_frames[len(_hand_frames) // 2] if _hand_frames
++                        else total // 2
++                    )
++                progress(
++                    f"Phase D-sam3: init frame {sam3_init_frame} "
++                    f"(static={_static_ratio[sam3_init_frame]:.2f}, "
++                    f"hand_area={_hand_area_norm[sam3_init_frame]:.3f}, "
++                    f"score={_score[sam3_init_frame]:.2f}/{_max_score:.2f})"
+                 )
+-            progress(
+-                f"Phase D-sam3: init frame {sam3_init_frame} "
+-                f"(static={_static_ratio[sam3_init_frame]:.2f}, "
+-                f"hand_area={_hand_area_norm[sam3_init_frame]:.3f}, "
+-                f"score={_score[sam3_init_frame]:.2f}/{_max_score:.2f})"
+-            )
+ 
+             # Multi-candidate init frame: run SAM-3 on N evenly-spaced frames
+             # plus the heuristic pick, choose the candidate that detects the
+@@ -1728,61 +1783,62 @@ def main():
+             # init silently loses prompts whose target object is not visible
+             # at the chosen instant (occluded by hand, off-screen, not yet
+             # introduced into the scene, etc.).
+-            import tempfile as _tempfile
+-            import shutil as _shutil
+-            SAM3_INIT_N_CANDIDATES = 8
+-            n_cand = max(1, min(SAM3_INIT_N_CANDIDATES, total))
+-            cand_idx = sorted(set(
+-                np.linspace(0, total - 1, n_cand, dtype=int).tolist()
+-                + [int(sam3_init_frame)]
+-            ))
+-            progress(f"Phase D-sam3: trying {len(cand_idx)} candidate init "
+-                     f"frames {cand_idx} (heuristic pick: {sam3_init_frame})")
+-            _shared_tmp = _tempfile.mkdtemp(prefix="sam3_init_")
+-            best = None  # ((n_uniq, mean_score), frame_idx, detections)
+-            try:
+-                for ci in cand_idx:
+-                    _frame_path = os.path.join(_shared_tmp, f"frame_{ci:06d}.jpg")
+-                    cv2.imwrite(_frame_path,
+-                                cv2.cvtColor(frames_rgb[ci], cv2.COLOR_RGB2BGR))
+-                    t_c = time.time()
+-                    try:
+-                        cand_results = run_sam3_detect(
+-                            image_path=_frame_path,
+-                            prompts=sam3_prompts,
+-                            min_score=0.4,
+-                            max_per_prompt=5,
+-                            version="sam3.1",
++            if _reviewed_init_mask is None:
++                import tempfile as _tempfile
++                import shutil as _shutil
++                SAM3_INIT_N_CANDIDATES = 8
++                n_cand = max(1, min(SAM3_INIT_N_CANDIDATES, total))
++                cand_idx = sorted(set(
++                    np.linspace(0, total - 1, n_cand, dtype=int).tolist()
++                    + [int(sam3_init_frame)]
++                ))
++                progress(f"Phase D-sam3: trying {len(cand_idx)} candidate init "
++                         f"frames {cand_idx} (heuristic pick: {sam3_init_frame})")
++                _shared_tmp = _tempfile.mkdtemp(prefix="sam3_init_")
++                best = None
++                try:
++                    for ci in cand_idx:
++                        _frame_path = os.path.join(_shared_tmp, f"frame_{ci:06d}.jpg")
++                        cv2.imwrite(_frame_path,
++                                    cv2.cvtColor(frames_rgb[ci], cv2.COLOR_RGB2BGR))
++                        t_c = time.time()
++                        try:
++                            cand_results = run_sam3_detect(
++                                image_path=_frame_path,
++                                prompts=sam3_prompts,
++                                min_score=0.4,
++                                max_per_prompt=5,
++                                version="sam3.1",
++                            )
++                        except Exception as _e:
++                            progress(f"  cand frame {ci}: FAIL ({_e})")
++                            continue
++                        n_uniq = len(set(r.prompt for r in cand_results))
++                        mean_score = (sum(r.score for r in cand_results)
++                                      / max(len(cand_results), 1)) if cand_results else 0.0
++                        progress(
++                            f"  cand frame {ci}: {n_uniq}/{len(sam3_prompts)} "
++                            f"unique prompts, {len(cand_results)} dets, "
++                            f"mean_score={mean_score:.3f} "
++                            f"({time.time() - t_c:.1f}s)"
+                         )
+-                    except Exception as _e:
+-                        progress(f"  cand frame {ci}: FAIL ({_e})")
+-                        continue
+-                    n_uniq = len(set(r.prompt for r in cand_results))
+-                    mean_score = (sum(r.score for r in cand_results)
+-                                  / max(len(cand_results), 1)) if cand_results else 0.0
+-                    progress(
+-                        f"  cand frame {ci}: {n_uniq}/{len(sam3_prompts)} "
+-                        f"unique prompts, {len(cand_results)} dets, "
+-                        f"mean_score={mean_score:.3f} "
+-                        f"({time.time() - t_c:.1f}s)"
+-                    )
+-                    score_tuple = (n_uniq, mean_score)
+-                    if best is None or score_tuple > best[0]:
+-                        best = (score_tuple, ci, cand_results)
+-                if best is not None:
+-                    sam3_init_frame = best[1]
+-                    sam3_results = best[2]
+-                    progress(
+-                        f"Phase D-sam3: chose init frame {sam3_init_frame} "
+-                        f"({best[0][0]} unique prompts, "
+-                        f"mean_score={best[0][1]:.3f}, "
+-                        f"{len(sam3_results)} raw detections)"
+-                    )
+-                else:
+-                    sam3_results = []
+-                    progress("Phase D-sam3: all candidates failed to detect")
+-            finally:
+-                _shutil.rmtree(_shared_tmp, ignore_errors=True)
++                        score_tuple = (n_uniq, mean_score)
++                        if best is None or score_tuple > best[0]:
++                            best = (score_tuple, ci, cand_results)
++                    if best is not None:
++                        sam3_init_frame = best[1]
++                        sam3_results = best[2]
++                        progress(
++                            f"Phase D-sam3: chose init frame {sam3_init_frame} "
++                            f"({best[0][0]} unique prompts, "
++                            f"mean_score={best[0][1]:.3f}, "
++                            f"{len(sam3_results)} raw detections)"
++                        )
++                    else:
++                        sam3_results = []
++                        progress("Phase D-sam3: all candidates failed to detect")
++                finally:
++                    _shutil.rmtree(_shared_tmp, ignore_errors=True)
+ 
+             # NMS across prompts (dedupe overlapping masks from multiple prompts)
+             # max_keep=7 to fit clips with multiple compound + simple fallbacks
+@@ -1804,10 +1860,13 @@ def main():
+                 sam3_tracker = _OT()
+ 
+                 for oid, m in enumerate(sam3_kept):
+-                    # Use bbox prompt (more stable than mask prompt)
++                    _init_kwargs = (
++                        {'mask': m.mask} if _reviewed_init_mask is not None
++                        else {'bbox': list(m.box)}
++                    )
+                     sam3_tracker.init_track(
+-                        frames_rgb[sam3_init_frame],
+-                        bbox=list(m.box), obj_id=oid)
++                        frames_rgb[sam3_init_frame], obj_id=oid,
++                        **_init_kwargs)
+                     # Store SAM3's own mask at init frame (higher quality than SAM2 re-seg)
+                     sam3_obj_states_multi[sam3_init_frame][oid] = _OS(
+                         mask=m.mask, center_3d=np.zeros(3), extent_3d=np.zeros(3),
+@@ -1830,9 +1889,13 @@ def main():
+                 if sam3_init_frame > 0:
+                     sam3_tracker.reset()
+                     for oid, m in enumerate(sam3_kept):
++                        _init_kwargs = (
++                            {'mask': m.mask} if _reviewed_init_mask is not None
++                            else {'bbox': list(m.box)}
++                        )
+                         sam3_tracker.init_track(
+-                            frames_rgb[sam3_init_frame],
+-                            bbox=list(m.box), obj_id=oid)
++                            frames_rgb[sam3_init_frame], obj_id=oid,
++                            **_init_kwargs)
+                     for i in range(sam3_init_frame - 1, -1, -1):
+                         results = sam3_tracker.track_frame(frames_rgb[i])
+                         sam3_obj_states_multi[i] = results
+@@ -1984,6 +2047,8 @@ def main():
+                     if mesh_out_dir is None:
+                         continue   # no cache dir, can't persist PLY
+                     ply_path = os.path.join(mesh_out_dir, f'obj_{oid}.ply')
++                    surface_mesh_path = os.path.join(
++                        mesh_out_dir, f'obj_{oid}_surface.glb')
+                     progress(f"Phase D-sam3d: reconstructing obj {oid} "
+                              f"(mask area {int(obj_state.mask.sum())})...")
+                     try:
+@@ -1992,10 +2057,12 @@ def main():
+                             rgb=init_frame_rgb,
+                             mask=obj_state.mask,
+                             out_ply_path=ply_path,
++                            out_mesh_path=surface_mesh_path,
+                             seed=42, quality='tier1',
+                             timeout=300.0)
+                         sam3_mesh_info[int(oid)] = {
+                             'ply_path': ply_path,
++                            'surface_mesh_path': res.mesh_path,
+                             'init_frame': int(sam3_init_frame),
+                             'canonical_translation': res.translation.tolist(),
+                             'canonical_rotation_quat': res.rotation_quat.tolist(),
+@@ -2011,6 +2078,13 @@ def main():
+                 progress("Phase D-sam3d: worker unavailable, skipping mesh reconstruction")
+         except Exception as _e:
+             progress(f"Phase D-sam3d: skipped ({_e})")
++        if (_reviewed_init_mask is not None and _RUN_SAM3D
++                and len(sam3_mesh_info) != len(sam3_kept)):
++            raise RuntimeError(
++                "human-reviewed frame-0 adapter requires one SAM3D mesh "
++                f"per tracked object; got {len(sam3_mesh_info)}/"
++                f"{len(sam3_kept)}"
++            )
+         state['sam3_mesh_info'] = sam3_mesh_info
+         if _RUN_SAM3D and sam3_mesh_info and args.cache_dir:
+             try:
+diff --git a/scripts/sam3_worker.py b/scripts/sam3_worker.py
+--- a/scripts/sam3_worker.py
++++ b/scripts/sam3_worker.py
+@@ -149,6 +149,8 @@
+                     help='Unix socket path to bind; will be (re)created.')
+     ap.add_argument('--version', default='sam3.1', choices=['sam3', 'sam3.1'])
+     ap.add_argument('--bpe_path', default=_BPE_PATH)
++    ap.add_argument('--checkpoint_path', default=None,
++                    help='Optional local checkpoint path; bypasses HuggingFace cache lookup.')
+     args = ap.parse_args()
+ 
+     # Clean stale socket before binding
+@@ -166,7 +168,12 @@
+ 
+     t0 = time.time()
+     _log(f"loading SAM3 ({args.version}) ...")
+-    ckpt_path = download_ckpt_from_hf(version=args.version)
++    ckpt_path = args.checkpoint_path
++    if ckpt_path is None:
++        ckpt_path = download_ckpt_from_hf(version=args.version)
++    elif not os.path.isfile(ckpt_path):
++        raise FileNotFoundError(f'SAM3 checkpoint does not exist: {ckpt_path}')
++    _log(f"checkpoint: {ckpt_path}")
+     model = build_sam3_image_model(bpe_path=args.bpe_path, checkpoint_path=ckpt_path)
+     processor = Sam3Processor(model)
+     torch.cuda.synchronize()
+diff --git a/scripts/sam3d_worker.py b/scripts/sam3d_worker.py
+--- a/scripts/sam3d_worker.py
++++ b/scripts/sam3d_worker.py
+@@ -18,12 +18,14 @@ Request::
+     {"image_rgb_path": "/path/frame.jpg",
+      "mask_path":      "/path/mask.npz",        # np.savez key='mask', bool (H, W)
+      "out_ply_path":   "/path/obj_0.ply",
++     "out_mesh_path":  "/path/obj_0_surface.glb",# optional triangle surface
+      "seed":           42,                      # optional
+      "quality":        "tier1"}                 # optional: "tier1" | "high"
+ 
+ Response (success)::
+     {"type":       "done",
+      "ply_path":   "/path/obj_0.ply",
++     "mesh_path":  "/path/obj_0_surface.glb",   # null when not requested
+      "translation": [x, y, z],                  # mesh -> camera_init, 3 float
+      "rotation":    [qw, qx, qy, qz],           # quaternion
+      "scale":       [s, s, s],                  # uniform 3-vec
+@@ -87,6 +89,7 @@ def _run_reconstruction(inference, req: dict) -> dict:
+     image_rgb_path = req['image_rgb_path']
+     mask_path = req['mask_path']
+     out_ply_path = req['out_ply_path']
++    out_mesh_path = req.get('out_mesh_path')
+     seed = int(req.get('seed', 42))
+     quality = req.get('quality', 'tier1')
+ 
+@@ -96,6 +99,8 @@ def _run_reconstruction(inference, req: dict) -> dict:
+         return {'type': 'error', 'msg': f'mask not found: {mask_path}'}
+ 
+     os.makedirs(os.path.dirname(out_ply_path) or '.', exist_ok=True)
++    if out_mesh_path:
++        os.makedirs(os.path.dirname(out_mesh_path) or '.', exist_ok=True)
+ 
+     # Load inputs
+     image = np.array(Image.open(image_rgb_path).convert('RGB')).astype(np.uint8)
+@@ -106,27 +111,17 @@ def _run_reconstruction(inference, req: dict) -> dict:
+                 'msg': f'mask shape {mask.shape} != image shape {image.shape[:2]}'}
+ 
+     t0 = time.time()
+-    # Quality preset
+-    if quality == 'high':
+-        kwargs = dict(stage1_inference_steps=25, stage2_inference_steps=25,
+-                      use_stage1_distillation=False,
+-                      use_stage2_distillation=False,
+-                      decode_formats=["gaussian"])
+-        out_key = 'gs'
+-    else:   # tier1
+-        kwargs = dict(stage1_inference_steps=2, stage2_inference_steps=12,
+-                      use_stage1_distillation=True,
+-                      use_stage2_distillation=True,
+-                      decode_formats=["gaussian_4"])
+-        out_key = 'gs_4'
+-
+     _log(f"reconstruct: {os.path.basename(image_rgb_path)} mask={mask.shape} "
+          f"mask_area={int(mask.sum())} quality={quality}")
+-    output = inference(image, mask, seed=seed, **kwargs)
++    output = inference(image, mask, seed=seed)
++    _log("official Inference call succeeded; output_keys="
++         + ",".join(sorted(str(k) for k in output.keys())))
+ 
+-    gs = output.get(out_key)
++    gs = output.get('gs')
++    if gs is None:
++        gs = output.get('gs_4')
+     if gs is None:
+-        return {'type': 'error', 'msg': f'pipeline returned no {out_key}'}
++        return {'type': 'error', 'msg': 'pipeline returned no gs/gs_4'}
+     gs.save_ply(out_ply_path)
+     n_points = 0
+     try:
+@@ -135,6 +130,19 @@ def _run_reconstruction(inference, req: dict) -> dict:
+     except Exception:
+         pass
+ 
++    mesh_path = None
++    if out_mesh_path:
++        glb = output.get('glb')
++        if glb is None:
++            return {
++                'type': 'error',
++                'msg': 'pipeline returned no glb although out_mesh_path was requested',
++            }
++        glb.export(out_mesh_path)
++        if not os.path.isfile(out_mesh_path) or os.path.getsize(out_mesh_path) == 0:
++            return {'type': 'error', 'msg': f'empty GLB export: {out_mesh_path}'}
++        mesh_path = out_mesh_path
++
+     translation = _tensor_to_list(output.get('translation', [0.0, 0.0, 0.0]))
+     rotation    = _tensor_to_list(output.get('rotation',    [1.0, 0.0, 0.0, 0.0]))
+     scale       = _tensor_to_list(output.get('scale',       [1.0, 1.0, 1.0]))
+@@ -144,6 +152,7 @@ def _run_reconstruction(inference, req: dict) -> dict:
+     return {
+         'type': 'done',
+         'ply_path': out_ply_path,
++        'mesh_path': mesh_path,
+         'translation': translation,
+         'rotation': rotation,
+         'scale': scale,
+@@ -179,6 +188,21 @@ def main():
+ 
+     _log(f"loading SAM 3D pipeline from {args.config} (repo={args.repo}) ...")
+     t0 = time.time()
++    dino_repo = os.environ.get('DINO_REPO', '').strip()
++    if dino_repo:
++        if not os.path.isfile(os.path.join(dino_repo, 'hubconf.py')):
++            raise FileNotFoundError(f'DINO_REPO has no hubconf.py: {dino_repo}')
++        import torch
++        original_hub_load = torch.hub.load
++
++        def _offline_hub_load(repo_or_dir, *hub_args, **hub_kwargs):
++            if repo_or_dir == 'facebookresearch/dinov2':
++                repo_or_dir = dino_repo
++                hub_kwargs['source'] = 'local'
++                _log(f'DINO official local source: {dino_repo}')
++            return original_hub_load(repo_or_dir, *hub_args, **hub_kwargs)
++
++        torch.hub.load = _offline_hub_load
+     from inference import Inference
+     inference = Inference(args.config, compile=args.compile)
+     load_s = time.time() - t0
+diff --git a/tools/batch_pipeline.py b/tools/batch_pipeline.py
+--- a/tools/batch_pipeline.py
++++ b/tools/batch_pipeline.py
+@@ -234,11 +234,10 @@
+                 SAM3D_WORKER_SOCKET, log_dir / "_sam3d_worker.log")
+             sam3d_socket = SAM3D_WORKER_SOCKET
+         except Exception as e:
+-            print(f"[sam3d] WARN — worker spawn failed: {e}", flush=True)
+-            print(f"[sam3d] Phase D-sam3d will silent-skip on every clip. "
+-                  f"Pass --no-sam3d-worker to suppress this warning.", flush=True)
+-            sam3d_proc = None
+-            sam3d_socket = None
++            raise RuntimeError(
++                "SAM3D worker is required for this run but failed to start; "
++                "refusing to continue with a silent-skipped object mesh"
++            ) from e
+     else:
+         print("[sam3d] --no-sam3d-worker — Phase D-sam3d will silent-skip",
+               flush=True)
+@@ -248,6 +247,15 @@
+     t0_all = time.time()
+     try:
+         for i, fdir in enumerate(eligible, 1):
++            if sam3d_proc is not None and (
++                sam3d_proc.poll() is not None
++                or sam3d_socket is None
++                or not Path(sam3d_socket).exists()
++            ):
++                raise RuntimeError(
++                    "SAM3D worker/socket disappeared before clip execution; "
++                    "refusing to continue with a silent-skipped object mesh"
++                )
+             eta = ''
+             if times:
+                 avg = sum(times) / len(times)
+@@ -258,6 +266,15 @@
+                 ok, elapsed, log_path = _run_one(
+                     fdir, args.sam3d_preset, log_dir,
+                     sam3d_socket=sam3d_socket)
++                if sam3d_proc is not None and (
++                    sam3d_proc.poll() is not None
++                    or sam3d_socket is None
++                    or not Path(sam3d_socket).exists()
++                ):
++                    raise RuntimeError(
++                        "SAM3D worker/socket disappeared during clip execution; "
++                        "the clip cannot be accepted as a full reconstruction"
++                    )
+             except KeyboardInterrupt:
+                 print("\nInterrupted")
+                 break

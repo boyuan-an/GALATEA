@@ -1,0 +1,502 @@
+diff --git a/reconstruction/config/paths.sh b/reconstruction/config/paths.sh
+--- a/reconstruction/config/paths.sh
++++ b/reconstruction/config/paths.sh
+@@ -20,17 +20,18 @@
+ # ── Weights (populated by setup/02_fetch_weights.sh) ──
+ export WEIGHTS_DIR="$RECON_ROOT/weights"
+ export TAPNET_CKPT="$WEIGHTS_DIR/tapnet/bootstapir_checkpoint_v2.pt"
++export SAM3_CKPT="${SAM3_CKPT:-$WEIGHTS_DIR/sam3/sam3.pt}"
+ 
+ # ── Conda env names (4 separate environments) ──
+ # Defaults match what `setup/01_create_envs.sh` creates. If you are reusing the
+ # pre-existing local envs, your sam3d env may be named differently
+ # (sam3 / hawor / tapnet already match) — set ENV_SAM3D accordingly.
+-export ENV_SAM3=sam3
+-export ENV_SAM3D=sam3d
+-export ENV_HAWOR=hawor
+-export ENV_TAPNET=tapnet
++export ENV_SAM3="${ENV_SAM3:-sam3}"
++export ENV_SAM3D="${ENV_SAM3D:-sam3d}"
++export ENV_HAWOR="${ENV_HAWOR:-hawor}"
++export ENV_TAPNET="${ENV_TAPNET:-tapnet}"
+ 
+ # ── Host / GPU ──
+-export CUDA_VISIBLE_DEVICES=0
++export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}"
+ # X display used by the click-based SAM3 segmentation UI (Stage 1).
+-export SAM3_DISPLAY=:1
++export SAM3_DISPLAY="${SAM3_DISPLAY:-:1}"
+diff --git a/reconstruction/run_pipeline.sh b/reconstruction/run_pipeline.sh
+--- a/reconstruction/run_pipeline.sh
++++ b/reconstruction/run_pipeline.sh
+@@ -18,14 +18,40 @@ source "$HERE/config/paths.sh"
+ 
+ # ──────────────────────────── Per-run inputs (args) ────────────────────────────
+ VIDEO_PATH="${1:?usage: run_pipeline.sh VIDEO_PATH [FRAME_N] [OBJECT] [ANCHOR_HAND]}"
+-# Resolve to an ABSOLUTE path up front: later stages `cd "$SCRIPTS_DIR"` and into the
+-# module dirs, so a RELATIVE VIDEO_PATH would stop resolving (run_sam3_video.py would
+-# then load 0 frames and crash with `IndexError: list index out of range`). This also
+-# makes the derived VIDEO_DIR / FRAME_PATH / MASKS_DIR absolute.
+-VIDEO_PATH="$(realpath "$VIDEO_PATH")"
++VIDEO_PATH="$(realpath --no-symlinks "$VIDEO_PATH")"
+ n="${2:-28}"
+ OBJECT_NAMES=("${3:-pan}")
+ ANCHOR_HAND="${4:-right}"
++OBJECT_POINT="${DOAS_OBJECT_POINT:-}"
++INPUT_MESH="${DOAS_INPUT_MESH:-}"
++INPUT_INTRINSICS="${DOAS_INPUT_INTRINSICS:-}"
++SAM3D_CONFIG="${DOAS_SAM3D_CONFIG:-$SAM3D_DIR/checkpoints/hf/pipeline.yaml}"
++START_STAGE="${DOAS_START_STAGE:-0}"
++REUSE_TRACK_LAYOUT="${DOAS_REUSE_TRACK_LAYOUT:-0}"
++STOP_AFTER_STAGE="${DOAS_STOP_AFTER_STAGE:-}"
++TRACK_BATCH_CHUNK_SIZE="${DOAS_BATCH_CHUNK_SIZE:-8}"
++REUSE_POINTMAP_INTRINSICS="${DOAS_REUSE_POINTMAP_INTRINSICS:-0}"
++TRACK_FRAME_RANGE="${DOAS_TRACK_FRAME_RANGE:-}"
++if [[ ! "$START_STAGE" =~ ^[0-4]$ ]]; then
++    echo "DOAS_START_STAGE must be an integer from 0 to 4, got: $START_STAGE" >&2
++    exit 2
++fi
++if [[ "$REUSE_TRACK_LAYOUT" != "0" && "$REUSE_TRACK_LAYOUT" != "1" ]]; then
++    echo "DOAS_REUSE_TRACK_LAYOUT must be 0 or 1, got: $REUSE_TRACK_LAYOUT" >&2
++    exit 2
++fi
++if [[ -n "$STOP_AFTER_STAGE" && "$STOP_AFTER_STAGE" != "2" ]]; then
++    echo "DOAS_STOP_AFTER_STAGE must be empty or 2, got: $STOP_AFTER_STAGE" >&2
++    exit 2
++fi
++if [[ ! "$TRACK_BATCH_CHUNK_SIZE" =~ ^[1-9][0-9]*$ ]]; then
++    echo "DOAS_BATCH_CHUNK_SIZE must be a positive integer, got: $TRACK_BATCH_CHUNK_SIZE" >&2
++    exit 2
++fi
++if [[ "$REUSE_POINTMAP_INTRINSICS" != "0" && "$REUSE_POINTMAP_INTRINSICS" != "1" ]]; then
++    echo "DOAS_REUSE_POINTMAP_INTRINSICS must be 0 or 1, got: $REUSE_POINTMAP_INTRINSICS" >&2
++    exit 2
++fi
+ 
+ # ──────────────────────────── Derived paths ────────────────────────────
+ VIDEO_DIR="$(dirname "$VIDEO_PATH")"
+@@ -40,14 +66,24 @@ HAND_MESHES_PATH="$VIDEO_DIR/$VIDEO_NAME/all_hand_meshes.npz"
+ 
+ source "$(conda info --base)/etc/profile.d/conda.sh"
+ 
++activate_env() {
++    local env_spec="$1"
++    if [ -f "$env_spec/bin/activate" ]; then
++        source "$env_spec/bin/activate"
++    else
++        conda activate "$env_spec"
++    fi
++}
++
+ # Frame extraction (Steps 0 & 1) uses ffmpeg from the sam3 env — activate it FIRST so
+ # no system/base ffmpeg is required and the pipeline runs directly on a clip.
+-conda activate "$ENV_SAM3"
++activate_env "$ENV_SAM3"
+ 
+ # ──────────────── Step 0: Extract all frames ───────────────────────────
++if [ "$START_STAGE" -le 1 ]; then
+ echo "=== Extracting all frames ==="
+ mkdir -p "$VIDEO_DIR/all_frames"
+-ffmpeg -i "$VIDEO_PATH" -vsync 0 -start_number 0 "$VIDEO_DIR/all_frames/%06d.png"
++ffmpeg -y -i "$VIDEO_PATH" -vsync 0 -start_number 0 "$VIDEO_DIR/all_frames/%06d.png"
+ 
+ # ──────────────── Step 1: Save config, extract ref frame, run SAM3 ────
+ echo "=== Saving config and extracting reference frame ==="
+@@ -69,11 +105,22 @@ cd "$SCRIPTS_DIR"
+ echo "=== Running SAM3 video segmentation (objects, click-based) ==="
+ for OBJ_NAME in "${OBJECT_NAMES[@]}"; do
+     OBJ_ID="${OBJ_NAME// /_}"
+-    DISPLAY="$SAM3_DISPLAY" python run_sam3_video.py \
+-        --video "$VIDEO_PATH" \
+-        --click \
+-        --obj_id "$OBJ_ID" \
+-        --frame_idx "$n"
++    if [ -n "$OBJECT_POINT" ]; then
++        python run_sam3_video.py \
++            --video "$VIDEO_PATH" \
++            --points "$OBJECT_POINT" \
++            --point_labels 1 \
++            --obj_id "$OBJ_ID" \
++            --frame_idx "$n" \
++            --checkpoint "$SAM3_CKPT"
++    else
++        DISPLAY="$SAM3_DISPLAY" python run_sam3_video.py \
++            --video "$VIDEO_PATH" \
++            --click \
++            --obj_id "$OBJ_ID" \
++            --frame_idx "$n" \
++            --checkpoint "$SAM3_CKPT"
++    fi
+ done
+ 
+ echo "=== Running SAM3 video segmentation (hands, text-based) ==="
+@@ -83,36 +130,54 @@ python run_sam3_video.py \
+     --video "$VIDEO_PATH" \
+     --text "$HAND_NAME" \
+     --obj_id "$HAND_ID" \
+-    --frame_idx "$n"
++    --frame_idx "$n" \
++    --checkpoint "$SAM3_CKPT"
++else
++    echo "=== Resuming at Stage $START_STAGE: reusing already-produced RGB-only SAM3 inputs ==="
++    test -s "$FRAME_PATH"
++    test -s "$MASKS_DIR/${OBJECT_NAMES[0]// /_}.png"
++    test -s "$MASKS_DIR/${ANCHOR_HAND}_hand_0.png"
++    test "$(find "$VIDEO_DIR/all_frames" -maxdepth 1 -type f -name '*.png' | wc -l)" -gt 0
++fi
+ 
+ # ──────────────── Step 2: 3D reconstruction, pointmaps, HaWoR ────────
++if [ "$START_STAGE" -le 2 ]; then
+ echo "=== Running batch masks to meshes ==="
+-conda activate "$ENV_SAM3D"
++activate_env "$ENV_SAM3D"
+ cd "$SAM3D_DIR"                                  # overlay: generate_mesh_sam3d.py
+ python generate_mesh_sam3d.py \
++    --config "$SAM3D_CONFIG" \
+     --image_path "$FRAME_PATH" \
+     --masks_dir "$MASKS_DIR"
++if [ -n "$INPUT_MESH" ]; then
++    echo "Using official single-frame SAM3D pose initialization; downstream tracking uses benchmark-provided mesh: $INPUT_MESH"
++fi
+ 
+ cd "$SCRIPTS_DIR"
+ echo "=== Computing pointmap for reference frame ==="
+-python get_pointmap_dir.py --image "$FRAME_PATH" --output "$POINTMAP_PATH"
++if [ -n "$INPUT_INTRINSICS" ]; then
++    IMG_FOCAL=$(awk '{print $1; exit}' "$INPUT_INTRINSICS")
++    echo "Using benchmark-provided reference focal length: $IMG_FOCAL"
++else
++    python get_pointmap_dir.py --image "$FRAME_PATH" --output "$POINTMAP_PATH"
++    IMG_FOCAL=$(head -n 1 "$INTRINSICS_PATH")
++fi
+ 
+ echo "=== Running HaWoR ==="
+-conda activate "$ENV_HAWOR"
++activate_env "$ENV_HAWOR"
+ cd "$HAWOR_DIR"                                  # patched: demo.py
+-IMG_FOCAL=$(head -n 1 "$INTRINSICS_PATH")
+-python demo.py --video_path "$VIDEO_PATH" --vis_mode cam --img_focal "$IMG_FOCAL" --static_camera
++python demo.py --video_path "$VIDEO_PATH" --vis_mode none --img_focal "$IMG_FOCAL" --static_camera
+ 
+ echo "=== Computing pointmaps for all frames ==="
+ cd "$SCRIPTS_DIR"
+-conda activate "$ENV_SAM3D"
++activate_env "$ENV_SAM3D"
+ python get_pointmap_dir.py --image_dir "$VIDEO_DIR/all_frames"
+ 
+ echo "=== Estimating gravity (GeoCalib) ==="
+ python predict_video_gravity.py "$VIDEO_DIR/all_frames" --output_path "$VIDEO_DIR/gravity.json"
+ 
+ # ──────────────── Step 2.5: TAPIR velocity tracking ───────────────────
+-conda activate "$ENV_TAPNET"
++activate_env "$ENV_TAPNET"
+ echo "=== Running TAPIR velocity tracking ==="
+ cd "$SCRIPTS_DIR"
+ for OBJ_NAME in "${OBJECT_NAMES[@]}"; do
+@@ -123,47 +188,87 @@ for OBJ_NAME in "${OBJECT_NAMES[@]}"; do
+         --object "$OBJECT_ID" \
+         --checkpoint "$TAPNET_CKPT"
+ done
++else
++    echo "=== Resuming at Stage $START_STAGE: validating completed Stage 2 products ==="
++    test -s "$MASKS_DIR/layout.json"
++    test -s "$HAND_MESHES_PATH"
++    test -s "$VIDEO_DIR/gravity.json"
++    for OBJ_NAME in "${OBJECT_NAMES[@]}"; do
++        OBJECT_ID="${OBJ_NAME// /_}"
++        test -s "$VIDEO_DIR/perframe_tracking_$OBJECT_ID/motion_stats.json"
++    done
++    frame_count="$(find "$VIDEO_DIR/all_frames" -maxdepth 1 -type f -name '*.png' | wc -l)"
++    pointmap_count="$(find "$VIDEO_DIR/all_frames" -maxdepth 1 -type f -name '*_pointmap.npy' | wc -l)"
++    test "$pointmap_count" -eq "$frame_count"
++fi
++
++if [[ "$STOP_AFTER_STAGE" == "2" ]]; then
++    echo "=== Stopping after Stage 2.5: RGB-only frontend cache complete ==="
++    exit 0
++fi
+ 
+ # ──────────────── Step 3: Object Tracking using guided pose prediction & projection ─────────
+-conda activate "$ENV_SAM3D"
++activate_env "$ENV_SAM3D"
+ echo "=== Running guided pose prediction for object tracking ==="
+ cd "$FASTSAM3D_DIR"                              # overlay: track_object.py
+ for OBJ_NAME in "${OBJECT_NAMES[@]}"; do
+     OBJECT_ID="${OBJ_NAME// /_}"
+-    python track_object.py \
+-        --config checkpoints/hf/pipeline.yaml \
+-        --vid_dir "$VIDEO_DIR" \
+-        --masks_root "$VIDEO_MASKS_DIR" \
+-        --object_name "$OBJECT_ID" \
+-        --init_frame "$n" \
+-        --output_dir "$VIDEO_DIR/obj_tracking_out/$OBJECT_ID" \
+-        --guidance_strength 1 \
+-        --save_layout \
+-        --fix_scale_to_init_frame \
+-        --pose_guidance_strength 0.5 \
+-        --num_pose_samples 25 \
+-        --scoring_metric render_iou \
+-        --pose_selection cluster \
+-        --cluster_dist_thresh 0.3 \
+-        --cluster_min_size 3 \
+-        --cluster_w_rot 1.5 \
+-        --chain_poses \
+-        --post_optimize \
+-        --no-enable_shape_icp \
+-        --chain_on_diffusion \
+-        --enable_ss_cache \
+-        --torch_compile \
+-        --euler_steps 25 \
+-        --rotvel_json "$VIDEO_DIR/perframe_tracking_$OBJECT_ID/motion_stats.json"
++    TRACK_MESH="$MASKS_DIR/$OBJECT_ID/${OBJECT_ID}.obj"
++    MESH_ARGS=()
++    if [ -n "$INPUT_MESH" ]; then
++        TRACK_MESH="$INPUT_MESH"
++        MESH_ARGS=(--mesh "$INPUT_MESH")
++    fi
++    TRACK_LAYOUT="$VIDEO_DIR/obj_tracking_out/$OBJECT_ID/combined_visualization/layout.json"
++    if [[ "$REUSE_TRACK_LAYOUT" == "1" && -s "$TRACK_LAYOUT" ]]; then
++        echo "AUDIT reusing completed official tracking layout: $TRACK_LAYOUT"
++    else
++        TRACK_OPT_ARGS=(--batch_chunk_size "$TRACK_BATCH_CHUNK_SIZE")
++        if [[ -n "$TRACK_FRAME_RANGE" ]]; then
++            TRACK_OPT_ARGS+=(--frames "$TRACK_FRAME_RANGE")
++        fi
++        if [[ "$REUSE_POINTMAP_INTRINSICS" == "1" ]]; then
++            TRACK_OPT_ARGS+=(--reuse_pointmap_intrinsics)
++        fi
++        python track_object.py \
++            --config "$SAM3D_CONFIG" \
++            --vid_dir "$VIDEO_DIR" \
++            --masks_root "$VIDEO_MASKS_DIR" \
++            --object_name "$OBJECT_ID" \
++            --init_frame "$n" \
++            --output_dir "$VIDEO_DIR/obj_tracking_out/$OBJECT_ID" \
++            --guidance_strength 1 \
++            --save_layout \
++            --fix_scale_to_init_frame \
++            --pose_guidance_strength 0.5 \
++            --num_pose_samples 25 \
++            --scoring_metric render_iou \
++            --pose_selection cluster \
++            --cluster_dist_thresh 0.3 \
++            --cluster_min_size 3 \
++            --cluster_w_rot 1.5 \
++            --chain_poses \
++            --post_optimize \
++            --no-enable_shape_icp \
++            --chain_on_diffusion \
++            --enable_ss_cache \
++            --torch_compile \
++            --euler_steps 25 \
++            --rotvel_json "$VIDEO_DIR/perframe_tracking_$OBJECT_ID/motion_stats.json" \
++            "${TRACK_OPT_ARGS[@]}" \
++            "${MESH_ARGS[@]}"
++    fi
+ 
+     cd "$SCRIPTS_DIR"
+ 
+     echo "=== Projecting mesh for $OBJ_NAME ==="
+     python run_project_mesh_combined.py \
+         --video "$VIDEO_PATH" \
+-        --mesh "$MASKS_DIR/$OBJECT_ID/${OBJECT_ID}.obj" \
++        --mesh "$TRACK_MESH" \
+         --json "$VIDEO_DIR/obj_tracking_out/$OBJECT_ID/combined_visualization/layout.json" \
+-        --output-base "$VIDEO_DIR/obj_tracking_out/$OBJECT_ID/combined_visualization/projected"
++        --output-base "$VIDEO_DIR/obj_tracking_out/$OBJECT_ID/combined_visualization/projected" \
++        --solid-color-image "$FRAME_PATH" \
++        --solid-color-mask "$MASKS_DIR/$OBJECT_ID.png"
+ 
+     echo "=== Converting layout to camera frame for $OBJ_NAME ==="
+     python convert_layout_to_camera_frame.py \
+@@ -175,7 +280,7 @@ done
+ 
+ # ──────────────── Step 4: Optimize translation/scale & visualize ──────
+ cd "$SCRIPTS_DIR"
+-conda activate "$ENV_SAM3D"
++activate_env "$ENV_SAM3D"
+ 
+ for OBJ_NAME in "${OBJECT_NAMES[@]}"; do
+     OBJECT_ID="${OBJ_NAME// /_}"
+@@ -183,11 +288,17 @@ for OBJ_NAME in "${OBJECT_NAMES[@]}"; do
+     LAYOUT_JSON_OPT="$VIDEO_DIR/obj_tracking_out/$OBJECT_ID/combined_visualization/layout_camera_frame_optimized.json"
+ 
+     echo "=== Optimizing translation/scale for $OBJ_NAME ==="
++    OPT_MESH_ARGS=()
++    if [ -n "$INPUT_MESH" ]; then
++        OPT_MESH_ARGS=(--mesh "$INPUT_MESH")
++    fi
+     python optimize_translation_scale.py \
+         --video-dir "$VIDEO_DIR" \
+         --layout-json "$LAYOUT_JSON_CF" \
++        --hand-meshes "$HAND_MESHES_PATH" \
+         --anchor-hand "$ANCHOR_HAND" \
+-        --ref-frame "$n"
++        --ref-frame "$n" \
++        "${OPT_MESH_ARGS[@]}"
+ 
+     # Optional interactive 3D visualization (needs viser in the sam3d env):
+     # MESH_SCALE="$(python3 -c "import json; d=json.load(open('$LAYOUT_JSON_OPT')); print(d['translation_scale_optimization']['mesh_scale'])")"
+diff --git a/reconstruction/scripts/run_project_mesh_combined.py b/reconstruction/scripts/run_project_mesh_combined.py
+--- a/reconstruction/scripts/run_project_mesh_combined.py
++++ b/reconstruction/scripts/run_project_mesh_combined.py
+@@ -61,6 +61,13 @@ def parse_args():
+                         help="Solid RGB color (0-1) for the object as 'r,g,b' "
+                              "(e.g. '0.6,0.9,0.6'). If set, overrides the mesh's "
+                              "loaded textures.")
++    parser.add_argument("--solid-color-image", default=None,
++                        help="Frame-0 RGB image used to sample the object's real "
++                             "solid color. When paired with --solid-color-mask, "
++                             "this overrides both textured and untextured meshes.")
++    parser.add_argument("--solid-color-mask", default=None,
++                        help="Frame-0 binary object mask paired with "
++                             "--solid-color-image.")
+     parser.add_argument("--left-hand-color", default="0.8,0.5,0.5",
+                         help="Solid RGB color (0-1) for the left hand as 'r,g,b'.")
+     parser.add_argument("--right-hand-color", default="0.5,0.5,0.8",
+@@ -79,6 +86,43 @@ def _parse_rgb(s):
+     return tuple(parts)
+ 
+ 
++def _sample_solid_rgb(image_path, mask_path):
++    image_bgr = cv2.imread(image_path, cv2.IMREAD_COLOR)
++    mask = cv2.imread(mask_path, cv2.IMREAD_UNCHANGED)
++    if image_bgr is None:
++        raise FileNotFoundError(f"Could not read solid-color image: {image_path}")
++    if mask is None:
++        raise FileNotFoundError(f"Could not read solid-color mask: {mask_path}")
++    if mask.ndim == 3:
++        mask = np.any(mask > 0, axis=2)
++    else:
++        mask = mask > 0
++    image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
++    if image_rgb.shape[:2] != mask.shape:
++        image_rgb = cv2.resize(
++            image_rgb, (mask.shape[1], mask.shape[0]),
++            interpolation=cv2.INTER_LINEAR,
++        )
++    pixels = image_rgb[mask]
++    if not len(pixels):
++        raise ValueError(f"Empty object mask, cannot sample solid color: {mask_path}")
++    rgb_u8 = np.median(pixels, axis=0).astype(np.uint8)
++    return tuple(float(value) / 255.0 for value in rgb_u8), tuple(int(value) for value in rgb_u8)
++
++
++def _paint_solid(mesh, rgb, device):
++    verts_list = mesh.verts_list()
++    faces_list = mesh.faces_list()
++    n_verts = verts_list[0].shape[0]
++    color_t = torch.tensor(rgb, dtype=torch.float32, device=device)
++    verts_features = color_t.expand(n_verts, 3).unsqueeze(0)
++    return Meshes(
++        verts=verts_list,
++        faces=faces_list,
++        textures=TexturesVertex(verts_features=verts_features),
++    )
++
++
+ def cam_to_pytorch3d(verts_cam):
+     """Convert vertices from camera frame (x-right, y-down, z-fwd) to PyTorch3D frame (x-left, y-up, z-fwd)."""
+     verts_p3d = torch.zeros_like(verts_cam)
+@@ -355,18 +399,33 @@ def main():
+     print("Loading mesh...")
+     mesh = load_objs_as_meshes([args.mesh], device=device)
+ 
++    if bool(args.solid_color_image) != bool(args.solid_color_mask):
++        print("[error] --solid-color-image and --solid-color-mask must be provided together")
++        sys.exit(2)
++
+     if args.object_color is not None:
+         rgb = _parse_rgb(args.object_color)
+-        verts_list = mesh.verts_list()
+-        faces_list = mesh.faces_list()
+-        n_verts = verts_list[0].shape[0]
+-        color_t = torch.tensor(rgb, dtype=torch.float32, device=device)
+-        verts_features = color_t.expand(n_verts, 3).unsqueeze(0)
+-        mesh = Meshes(
+-            verts=verts_list, faces=faces_list,
+-            textures=TexturesVertex(verts_features=verts_features),
+-        )
++        mesh = _paint_solid(mesh, rgb, device)
+         print(f"Object mesh re-colored to solid RGB={rgb}")
++    elif args.solid_color_image:
++        original_texture = "present" if mesh.textures is not None else "missing"
++        rgb, rgb_u8 = _sample_solid_rgb(
++            args.solid_color_image, args.solid_color_mask,
++        )
++        mesh = _paint_solid(mesh, rgb, device)
++        print(
++            f"AUDIT object_mesh_texture={original_texture} "
++            "solid_color_policy=force_all_known_meshes "
++            f"solid_color_source=frame0_mask_median rgb_u8={rgb_u8}"
++        )
++    elif mesh.textures is None:
++        print(
++            "[error] Object mesh has no texture. Supply --object-color or the "
++            "--solid-color-image/--solid-color-mask pair."
++        )
++        sys.exit(2)
++    else:
++        print("AUDIT object_mesh_texture=present solid_color_fallback=not_used")
+ 
+     # Load hand data once
+     hand_data = None
+@@ -514,11 +573,18 @@ def main():
+     if files:
+         video_path = os.path.join(args.output_base, "video.mp4")
+         frame_pattern = os.path.join(args.output_base, "frame_%d.png")
++        encoders = subprocess.run(
++            ["ffmpeg", "-hide_banner", "-encoders"],
++            check=True,
++            capture_output=True,
++            text=True,
++        ).stdout
++        video_encoder = "libx264" if "libx264" in encoders else "libopenh264"
+         subprocess.run(
+             [
+                 "ffmpeg", "-y", "-framerate", "30",
+                 "-i", frame_pattern,
+-                "-c:v", "libx264", "-pix_fmt", "yuv420p",
++                "-c:v", video_encoder, "-pix_fmt", "yuv420p",
+                 video_path,
+             ],
+             check=True,
+diff --git a/reconstruction/scripts/run_sam3_video.py b/reconstruction/scripts/run_sam3_video.py
+--- a/reconstruction/scripts/run_sam3_video.py
++++ b/reconstruction/scripts/run_sam3_video.py
+@@ -255,7 +255,10 @@
+ 
+     # Build predictor
+     print("Loading SAM3 model...")
+-    predictor = build_sam3_video_predictor()
++    predictor_kwargs = {}
++    if args.checkpoint is not None:
++        predictor_kwargs["checkpoint_path"] = args.checkpoint
++    predictor = build_sam3_video_predictor(**predictor_kwargs)
+ 
+     # Start session
+     print(f"Starting session on: {args.video}")
+@@ -396,12 +399,22 @@
+ 
+     # Encode overlay frames to H264 video using ffmpeg
+     print(f"Encoding tracked video with H264: {out_video_path}")
++    video_encoder = os.environ.get("SAM3_VIDEO_ENCODER")
++    if video_encoder is None:
++        encoders = subprocess.run(
++            ["ffmpeg", "-hide_banner", "-encoders"],
++            check=True,
++            capture_output=True,
++            text=True,
++        ).stdout
++        video_encoder = "libx264" if "libx264" in encoders else "libopenh264"
++    print(f"Using ffmpeg encoder: {video_encoder}")
+     subprocess.run(
+         [
+             "ffmpeg", "-y",
+             "-framerate", "24",
+             "-i", os.path.join(overlay_dir, "frame_%06d.png"),
+-            "-c:v", "libx264",
++            "-c:v", video_encoder,
+             "-pix_fmt", "yuv420p",
+             out_video_path,
+         ],

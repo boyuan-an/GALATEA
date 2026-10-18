@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "methods": {
+    "videomanip": [
+      "videomanip",
+      "videomanip_sam2",
+      "videomanip_hamer",
+      "videomanip_fp"
+    ],
+    "egoinfinity": [
+      "egoinfinity",
+      "fpplusplus"
+    ],
+    "do_as_i_do": [
+      "do_as_i_do",
+      "doas_fast_sam3d",
+      "doas_hawor"
+    ]
+  },
+  "repositories": [
+    {
+      "key": "videomanip",
+      "path": "VideoManip",
+      "url": "https://github.com/hychen-naza/VideoManip.git",
+      "revision": "9d0f286af35d73f4252d115d968e0a9c06542b9c",
+      "patches": [
+        "baselines/videomanip/patches/runtime.patch"
+      ]
+    },
+    {
+      "key": "videomanip_sam2",
+      "path": "VideoManip/reconstruction/sam2/sam2",
+      "url": "https://github.com/facebookresearch/sam2.git",
+      "revision": "2b90b9f5ceec907a1c18123530e92e794ad901a4",
+      "upstream_patches": [
+        {
+          "repo": "videomanip",
+          "path": "reconstruction/sam2/sam2.patch"
+        }
+      ],
+      "copies": [
+        {
+          "repo": "videomanip",
+          "source": "reconstruction/sam2/added",
+          "target": "."
+        }
+      ]
+    },
+    {
+      "key": "videomanip_hamer",
+      "path": "VideoManip/reconstruction/hamer/hamer",
+      "url": "https://github.com/geopavlakos/hamer.git",
+      "revision": "091de2a07b5414a2f9373d2bec368b8c979883b6",
+      "submodules": true,
+      "upstream_patches": [
+        {
+          "repo": "videomanip",
+          "path": "reconstruction/hamer/hamer.patch"
+        }
+      ],
+      "copies": [
+        {
+          "repo": "videomanip",
+          "source": "reconstruction/hamer/added",
+          "target": "."
+        }
+      ],
+      "patches": [
+        "baselines/videomanip/patches/hamer-runtime.patch"
+      ]
+    },
+    {
+      "key": "videomanip_fp",
+      "path": "VideoManip/reconstruction/foundationpose/FoundationPose",
+      "url": "https://github.com/NVlabs/FoundationPose.git",
+      "revision": "e3d597b8c6b851d053094ebd6fa240191c5238f8",
+      "upstream_patches": [
+        {
+          "repo": "videomanip",
+          "path": "reconstruction/foundationpose/foundationpose_modifications.patch"
+        }
+      ],
+      "copies": [
+        {
+          "repo": "videomanip",
+          "source": "reconstruction/foundationpose/scripts/run_demo_multi_scale.py",
+          "target": "run_demo_multi_scale.py"
+        }
+      ],
+      "patches": [
+        "baselines/videomanip/patches/foundationpose-runtime.patch"
+      ]
+    },
+    {
+      "key": "egoinfinity",
+      "path": "EgoInfinity",
+      "url": "https://github.com/Rice-RobotPI-Lab/EgoInfinity.git",
+      "revision": "de59610531c08010d63d0493d6a72973eabd402e",
+      "patches": [
+        "baselines/egoinfinity/patches/runtime.patch"
+      ]
+    },
+    {
+      "key": "fpplusplus",
+      "path": "FoundationPose-plus-plus",
+      "url": "https://github.com/teal024/FoundationPose-plus-plus.git",
+      "revision": "58aa7154de23ae86d542366858fc6bcca3b747b0",
+      "submodules": true
+    },
+    {
+      "key": "do_as_i_do",
+      "path": "do-as-i-do",
+      "url": "https://github.com/malik-group/do-as-i-do.git",
+      "revision": "b5a617060a970ba2d9af7b2e216903c643cda185",
+      "submodules": true,
+      "patches": [
+        "baselines/do_as_i_do/patches/runtime.patch"
+      ]
+    },
+    {
+      "key": "doas_fast_sam3d",
+      "path": "do-as-i-do/reconstruction/modules/Fast-SAM3D",
+      "url": "https://github.com/malik-group/Fast-SAM3D.git",
+      "revision": "823d4784dbf73a9a58ca8b2384dee1eaf8fc1c6b",
+      "patches": [
+        "baselines/do_as_i_do/patches/fast-sam3d-runtime.patch"
+      ]
+    },
+    {
+      "key": "doas_hawor",
+      "path": "do-as-i-do/reconstruction/modules/HaWoR",
+      "url": "https://github.com/malik-group/HaWoR.git",
+      "revision": "2c3fa0c06e54a1b192c1ff692eaa89d526cd6317",
+      "patches": [
+        "baselines/do_as_i_do/patches/hawor-runtime.patch"
+      ]
+    }
+  ]
+}

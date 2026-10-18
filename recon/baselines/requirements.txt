@@ -1,0 +1,5 @@
+numpy>=1.24,<2
+scipy>=1.10
+trimesh>=4.4
+Pillow>=9
+opencv-python-headless>=4.8,<4.12

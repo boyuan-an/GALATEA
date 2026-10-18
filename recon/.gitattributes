@@ -1,0 +1,2 @@
+* text=auto eol=lf
+baselines/*/patches/*.patch -whitespace

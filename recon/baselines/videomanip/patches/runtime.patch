@@ -1,0 +1,86 @@
+diff --git a/reconstruction/foundationpose/scripts/run_demo_multi_scale.py b/reconstruction/foundationpose/scripts/run_demo_multi_scale.py
+--- a/reconstruction/foundationpose/scripts/run_demo_multi_scale.py
++++ b/reconstruction/foundationpose/scripts/run_demo_multi_scale.py
+@@ -14,14 +14,6 @@ from tqdm import tqdm
+ import numpy as np
+ import trimesh
+ import shutil
+-import matplotlib.pyplot as plt
+-from pytorch3d.io import load_objs_as_meshes
+-from pytorch3d.structures import Meshes
+-from pytorch3d.renderer import (
+-    FoVPerspectiveCameras, RasterizationSettings,
+-    MeshRenderer, MeshRasterizer,
+-    SoftSilhouetteShader, BlendParams,
+-)
+ from PIL import Image
+ import pdb 
+ 
+@@ -372,8 +364,9 @@ def main():
+     code_dir = os.path.dirname(os.path.realpath(__file__))
+     parser.add_argument('--object_folder', type=str, default="cloth")
+     parser.add_argument('--object_type', type=str, default="grasp")
+-    object_folder = parser.parse_args().object_folder
+-    object_type = parser.parse_args().object_type
++    early_args, _ = parser.parse_known_args()
++    object_folder = early_args.object_folder
++    object_type = early_args.object_type
+     # Per-object working dirs. process_videos.sh / run_object_pos_est_in_docker.sh
+     # forward DATA_ROOT; when running this script by hand inside the container we
+     # fall back to FoundationPose's own demo_data/ layout.
+diff --git a/reconstruction/hamer/added/hand_detection.py b/reconstruction/hamer/added/hand_detection.py
+--- a/reconstruction/hamer/added/hand_detection.py
++++ b/reconstruction/hamer/added/hand_detection.py
+@@ -57,7 +57,7 @@ def main():
+     model, model_cfg = load_hamer(args.checkpoint, estimated_focal_length=int(K[0,0]))
+ 
+     # Setup HaMeR model
+-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
++    device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+     model = model.to(device)
+     model.eval()
+ 
+diff --git a/reconstruction/sam2/added/run_video_function.py b/reconstruction/sam2/added/run_video_function.py
+--- a/reconstruction/sam2/added/run_video_function.py
++++ b/reconstruction/sam2/added/run_video_function.py
+@@ -4,7 +4,10 @@ import pdb
+ os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+ import numpy as np
+ import torch
+-import matplotlib.pyplot as plt
++try:
++    import matplotlib.pyplot as plt
++except ImportError:
++    plt = None
+ from PIL import Image
+ import cv2
+ import argparse
+@@ -143,6 +146,10 @@ def process_video_folder(video_dir, output_dir=None, clicked_info=None, object_m
+     first_frame = Image.open(first_frame_path)
+     
+     if clicked_info is None:
++        if plt is None:
++            raise RuntimeError(
++                "matplotlib is required only when collecting interactive clicks"
++            )
+         # Reset global variables for new clicking session
+         global current_object_points, current_object_labels, all_objects_data, current_object_idx, clicking_finished
+         current_object_points = []
+@@ -174,7 +181,7 @@ def process_video_folder(video_dir, output_dir=None, clicked_info=None, object_m
+         plt.close()
+ 
+         # Save all objects' clicked points and labels to json file
+-        object_click_path = os.path.join(os.path.dirname(__file__), "object_click.json")
++        object_click_path = os.environ.get("VIDEOMANIP_CLICK_JSON", os.path.join(os.path.dirname(__file__), "object_click.json"))
+         with open(object_click_path, "r") as f:
+             object_click_data = json.load(f)
+         object_name = os.path.basename(os.path.dirname(video_dir))
+@@ -375,7 +382,7 @@ def main():
+     video_name = os.path.basename(os.path.dirname(args.video_dir))
+     print(f"Video name: {video_name}")
+     # read the object_click.json file
+-    object_click_path = os.path.join(os.path.dirname(__file__), "object_click.json")
++    object_click_path = os.environ.get("VIDEOMANIP_CLICK_JSON", os.path.join(os.path.dirname(__file__), "object_click.json"))
+     with open(object_click_path, "r") as f:
+         object_click_data = json.load(f)
+     if video_name in object_click_data:

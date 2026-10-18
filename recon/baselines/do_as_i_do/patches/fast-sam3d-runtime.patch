@@ -1,0 +1,168 @@
+diff --git a/sam3d_objects/model/backbone/tdfy_dit/representations/mesh/flexicubes/flexicubes.py b/sam3d_objects/model/backbone/tdfy_dit/representations/mesh/flexicubes/flexicubes.py
+--- a/sam3d_objects/model/backbone/tdfy_dit/representations/mesh/flexicubes/flexicubes.py
++++ b/sam3d_objects/model/backbone/tdfy_dit/representations/mesh/flexicubes/flexicubes.py
+@@ -15,7 +15,11 @@
+ # limitations under the License.
+ import torch
+ from .tables import *
+-from kaolin.utils.testing import check_tensor
++try:
++    from kaolin.utils.testing import check_tensor
++except (ImportError, ValueError):
++    def check_tensor(*args, **kwargs):
++        return True
+ 
+ __all__ = [
+     'FlexiCubes'
+diff --git a/sam3d_objects/pipeline/inference_pipeline_pointmap.py b/sam3d_objects/pipeline/inference_pipeline_pointmap.py
+--- a/sam3d_objects/pipeline/inference_pipeline_pointmap.py
++++ b/sam3d_objects/pipeline/inference_pipeline_pointmap.py
+@@ -257,7 +257,7 @@ class InferencePipelinePointMap(InferencePipeline):
+         revised_scale[:] = mean_val
+         return revised_scale
+ 
+-    def compute_pointmap(self, image, pointmap=None):
++    def compute_pointmap(self, image, pointmap=None, return_model_intrinsics=False):
+         loaded_image = self.image_to_float(image)
+         loaded_image = torch.from_numpy(loaded_image)
+         loaded_mask = loaded_image[..., -1]
+@@ -304,6 +304,8 @@ class InferencePipelinePointMap(InferencePipeline):
+                 points_tensor.permute(1, 2, 0), device=self.device
+             )
+             point_map_tensor["intrinsics"] = intrinsics_result["intrinsics"]
++        elif return_model_intrinsics:
++            point_map_tensor["intrinsics"] = intrinsics
+ 
+         return point_map_tensor
+ 
+@@ -796,4 +798,3 @@ class InferencePipelinePointMap(InferencePipeline):
+             "scale": torch.tensor([[1.0, 1.0, 1.0]]),
+             "rotation": torch.tensor([[1.0, 0.0, 0.0, 0.0]]),
+         }
+-
+diff --git a/sam3d_objects/utils/visualization/image_mesh.py b/sam3d_objects/utils/visualization/image_mesh.py
+--- a/sam3d_objects/utils/visualization/image_mesh.py
++++ b/sam3d_objects/utils/visualization/image_mesh.py
+@@ -6,13 +6,16 @@ import torch
+ from pytorch3d.structures import Meshes
+ from pytorch3d.renderer.mesh.textures import TexturesVertex
+ 
+-from utils3d.numpy import (
+-    depth_edge,
+-    normals_edge,
+-    points_to_normals,
+-    image_uv,
+-    image_mesh,
+-)
++try:
++    from utils3d.numpy import (
++        depth_edge,
++        normals_edge,
++        points_to_normals,
++        image_uv,
++        image_mesh,
++    )
++except ImportError:
++    depth_edge = normals_edge = points_to_normals = image_uv = image_mesh = None
+ 
+ np.acos = np.arccos  # sam3d_objects-3dfy version of numpy doesn't have acos
+ 
+diff --git a/track_object.py b/track_object.py
+--- a/track_object.py
++++ b/track_object.py
+@@ -71,6 +71,7 @@ sys.path.insert(0, os.path.join(project_root, "notebook"))
+ import argparse
+ import glob
+ import json
++import random
+ import time
+ from copy import deepcopy
+ 
+@@ -117,7 +118,6 @@ def load_mesh_as_open3d(mesh_path: str) -> o3d.geometry.TriangleMesh:
+     o3d_mesh = o3d.geometry.TriangleMesh()
+     o3d_mesh.vertices = o3d.utility.Vector3dVector(np.array(tm.vertices))
+     o3d_mesh.triangles = o3d.utility.Vector3iVector(np.array(tm.faces))
+-    o3d_mesh.compute_vertex_normals()
+     return o3d_mesh
+ 
+ 
+@@ -1063,9 +1063,12 @@ def guided_predict_pose(
+     ss_inference_steps=None,
+     ll_steps=25,
+     num_pose_samples_per_pgs=None,
++    reuse_pointmap_intrinsics=False,
+ ):
+     # Preprocess (once -- independent of seed)
+-    pointmap_dict = pipeline.compute_pointmap(rgba)
++    pointmap_dict = pipeline.compute_pointmap(
++        rgba, return_model_intrinsics=reuse_pointmap_intrinsics,
++    )
+     pointmap = pointmap_dict["pointmap"]
+     ss_input_dict = pipeline.preprocess_image(
+         rgba, pipeline.ss_preprocessor, pointmap=pointmap,
+@@ -1473,6 +1476,14 @@ def save_combined_visualization(
+ # ------------------------------------------------------------------
+ 
+ def process_video(args):
++    if args.global_seed is not None:
++        random.seed(args.global_seed)
++        np.random.seed(args.global_seed)
++        torch.manual_seed(args.global_seed)
++        if torch.cuda.is_available():
++            torch.cuda.manual_seed_all(args.global_seed)
++        logger.info(f"Set process-global deterministic seed: {args.global_seed}")
++
+     # If num_pose_samples_per_pgs is set, compute effective num_pose_samples
+     if args.num_pose_samples_per_pgs is not None:
+         args.num_pose_samples = args.num_pose_samples_per_pgs * 10
+@@ -1530,9 +1541,13 @@ def process_video(args):
+         args.enable_slat_carving = True
+         args.enable_mesh_aggregation = True
+     if args.enable_ss_cache:
+-        config['ss_generator_config_path'] = "ss_generator_faster.yaml"
++        config['ss_generator_config_path'] = os.path.join(
++            project_root, "checkpoints", "hf", "ss_generator_faster.yaml"
++        )
+     if args.enable_slat_carving:
+-        config['slat_generator_config_path'] = "slat_generator_faster.yaml"
++        config['slat_generator_config_path'] = os.path.join(
++            project_root, "checkpoints", "hf", "slat_generator_faster.yaml"
++        )
+ 
+     logger.info(f"[Fast-SAM3D] SS:{args.enable_ss_cache}, "
+                 f"SLaT:{args.enable_slat_carving}, "
+@@ -1785,6 +1800,7 @@ def process_video(args):
+             ss_inference_steps=args.ss_inference_steps,
+             ll_steps=args.ll_steps,
+             num_pose_samples_per_pgs=args.num_pose_samples_per_pgs,
++            reuse_pointmap_intrinsics=args.reuse_pointmap_intrinsics,
+         )
+ 
+         torch.cuda.synchronize()
+@@ -1908,6 +1924,8 @@ def process_video(args):
+         "enable_ss_cache": args.enable_ss_cache,
+         "torch_compile": args.torch_compile,
+         "batch_chunk_size": args.batch_chunk_size,
++        "reuse_pointmap_intrinsics": args.reuse_pointmap_intrinsics,
++        "global_seed": args.global_seed,
+         "frames": all_results,
+     }
+     save_path = os.path.join(args.output_dir, "guided_poses.pt")
+@@ -1942,6 +1960,8 @@ def main():
+     parser.add_argument("--output_dir", default="guided_pose_output", help="Output directory")
+     parser.add_argument("--device", default="cuda", help="Device")
+     parser.add_argument("--seed", type=int, default=42, help="Random seed")
++    parser.add_argument("--global_seed", type=int, default=None,
++                        help="Optional process-global seed for reproducible target inversion and pilot comparisons")
+     parser.add_argument("--init_frame", type=int, default=0,
+                         help="Anchor frame index (default 0)")
+     parser.add_argument("--guidance_strength", type=float, default=0.7, help="Shape guidance alpha")
+@@ -2009,6 +2029,8 @@ def main():
+     # --- Batching ---
+     parser.add_argument("--batch_chunk_size", type=int, default=8,
+                         help="Batch chunk size for batched sampling (adjust based on GPU VRAM)")
++    parser.add_argument("--reuse_pointmap_intrinsics", action="store_true", default=False,
++                        help="Reuse intrinsics from the pointmap forward pass instead of rerunning MoGe")
+     parser.add_argument("--euler_steps", type=int, default=None,
+                         help="Number of Euler steps (default: pipeline default)")
+ 

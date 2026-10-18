@@ -1,0 +1,25 @@
+diff --git a/vitpose_model.py b/vitpose_model.py
+--- a/vitpose_model.py
++++ b/vitpose_model.py
+@@ -62,6 +62,21 @@ class ViTPoseModel(object):
+             image: np.ndarray,
+             det_results: list[np.ndarray],
+             box_score_threshold: float = 0.5) -> list[dict[str, np.ndarray]]:
++        if not getattr(self, "_device_audit_logged", False):
++            print(
++                "VITPOSE_DEVICE_AUDIT"
++                f" requested={self.device}"
++                f" model={next(self.model.parameters()).device}"
++                f" cuda_count={torch.cuda.device_count()}"
++                f" cuda_current={torch.cuda.current_device() if torch.cuda.is_available() else 'cpu'}"
++                f" visible={os.environ.get('CUDA_VISIBLE_DEVICES', '')}",
++                flush=True,
++            )
++            self._device_audit_logged = True
++        if self.device.type == "cuda" and torch.cuda.device_count() == 0:
++            from torch.nn.parallel import _functions as parallel_functions
++            if parallel_functions._streams is None:
++                parallel_functions._streams = [None]
+         image = image[:, :, ::-1]  # RGB -> BGR
+         person_results = process_mmdet_results(det_results, 1)
+         out, _ = inference_top_down_pose_model(self.model,

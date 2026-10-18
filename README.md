@@ -24,6 +24,10 @@
   <a href="https://boyuan-an.github.io/GALATEA/">🌐 Project Page</a>
 </h3>
 
+> [!NOTE]
+> This public code was obtained by reorganizing our development code with vibe coding.
+> If you run into any problems, please [open an issue](https://github.com/boyuan-an/GALATEA/issues).
+
 <p align="center">
   <img src="assets/galatea_pipeline_overview.jpg" width="95%" alt="Overview of the GALATEA pipeline">
 </p>
@@ -40,7 +44,61 @@ Generated hand–object interaction videos provide a controllable way to propose
 
 ## 📋 TODO
 
-We will publicly release both items below **before November 2026**.
+We will publicly release the remaining item below **before November 2026**.
 
+- [x] Release the [HOI reconstruction code](recon/README.md) and [example generated videos](recon/examples/power_drill/README.md).
 - [ ] Release the reinforcement-learning tracking code and example datasets.
-- [ ] Release the HOI reconstruction code and example generated videos, together with their prompts.
+
+## Repository structure
+
+| Directory | Contents | Status |
+|---|---|---|
+| [`recon/`](recon/README.md) | HOI reconstruction: from a generated video and an object mesh to hand–object trajectories, with installation, the bundled example, and baseline adapters | Released |
+| `rl/` | Reinforcement-learning tracking, policy distillation, and real-world deployment | Coming soon |
+
+Each component has its own environments and documentation. To run the bundled
+reconstruction example:
+
+```bash
+git clone https://github.com/boyuan-an/GALATEA.git
+cd GALATEA/recon
+bash scripts/setup/install.sh
+```
+
+Then obtain the model files described in
+[recon/docs/model-assets.md](recon/docs/model-assets.md) and run:
+
+```bash
+bash scripts/setup/check_install.sh --gpu
+bash scripts/run_example.sh --gpu 0
+```
+
+See the [reconstruction README](recon/README.md) for inputs, outputs, and options.
+
+## Citation
+
+If you use this code in your research, please cite GALATEA:
+
+```bibtex
+@article{wu2026galatea,
+  title   = {Grounding Generated Video Plans in Simulation Towards Versatile Dexterous Controllers},
+  author  = {Wu, Tianyue and An, Boyuan and Zhao, Shuqi and Guo, Heyu and Xing, Wanli and Ma, Yi and Zhang, Kaifeng and Wu, Ruihai and Tomizuka, Masayoshi},
+  journal = {arXiv preprint arXiv:2609.10050},
+  year    = {2026},
+  url     = {https://arxiv.org/abs/2609.10050}
+}
+```
+
+## Acknowledgments
+
+Parts of the reconstruction code build on the code framework of [GRAIL](https://github.com/NVlabs/GRAIL).
+The reconstruction pipeline integrates MoGe-2, GroundingDINO, SAM 2,
+FoundationPose, WiLoR, and HOI-DETR. We thank the authors of these projects for
+making their work available. Please also cite the works relevant to your use;
+component links are collected in [recon/THIRD_PARTY.md](recon/THIRD_PARTY.md).
+
+## License
+
+This repository is released under the [NVIDIA License](LICENSE), which limits
+use to non-commercial research and evaluation. Third-party code, checkpoints,
+and MANO data retain their own terms; see [recon/THIRD_PARTY.md](recon/THIRD_PARTY.md).

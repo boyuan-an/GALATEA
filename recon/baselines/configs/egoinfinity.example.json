@@ -1,0 +1,21 @@
+{
+  "method": "egoinfinity",
+  "repo": "../../third_party/EgoInfinity",
+  "fp_repo": "../../third_party/FoundationPose-plus-plus",
+  "ego_python": [
+    "/path/to/egoinfinity-env/bin/python"
+  ],
+  "adapter_python": [
+    "/path/to/adapter-env/bin/python"
+  ],
+  "fp_python": [
+    "/path/to/fpplusplus-env/bin/python"
+  ],
+  "env": {
+    "SAM3_PYTHON": "/path/to/sam3-env/bin/python",
+    "SAM3_REPO": "/path/to/sam3",
+    "SAM3D_PYTHON": "/path/to/sam3d-env/bin/python",
+    "SAM3D_REPO": "/path/to/sam-3d-objects",
+    "SAM3D_SPAWN_TIMEOUT": "1800"
+  }
+}

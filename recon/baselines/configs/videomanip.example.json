@@ -1,0 +1,20 @@
+{
+  "method": "videomanip",
+  "repo": "../../third_party/VideoManip",
+  "fp_repo": "../../third_party/VideoManip/reconstruction/foundationpose/FoundationPose",
+  "moge_python": [
+    "/path/to/moge-env/bin/python"
+  ],
+  "hand_python": [
+    "/path/to/hamer-env/bin/python"
+  ],
+  "sam_python": [
+    "/path/to/sam2-env/bin/python"
+  ],
+  "fp_python": [
+    "/path/to/foundationpose-env/bin/python"
+  ],
+  "est_refine_iter": 5,
+  "track_refine_iter": 2,
+  "env": {}
+}
