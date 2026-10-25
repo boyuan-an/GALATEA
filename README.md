@@ -47,14 +47,15 @@ Generated hand–object interaction videos provide a controllable way to propose
 We will publicly release the remaining item below **before November 2026**.
 
 - [x] Release the [HOI reconstruction code](recon/README.md) and [example generated videos](recon/examples/power_drill/README.md).
-- [ ] Release the reinforcement-learning tracking code and example datasets.
+- [x] Release the [reinforcement-learning tracking code](rl/README.md) and pretrained checkpoints.
+- [ ] Release the example datasets for reinforcement-learning tracking.
 
 ## Repository structure
 
 | Directory | Contents | Status |
 |---|---|---|
 | [`recon/`](recon/README.md) | HOI reconstruction: from a generated video and an object mesh to hand–object trajectories, with installation, the bundled example, and baseline adapters | Released |
-| `rl/` | Reinforcement-learning tracking, policy distillation, and real-world deployment | Coming soon |
+| [`rl/`](rl/README.md) | Reinforcement-learning tracking: training and evaluation of the arm–hand tracking policy, with pretrained checkpoints | Released |
 
 Each component has its own environments and documentation. To run the bundled
 reconstruction example:
@@ -73,7 +74,9 @@ bash scripts/setup/check_install.sh --gpu
 bash scripts/run_example.sh --gpu 0
 ```
 
-See the [reconstruction README](recon/README.md) for inputs, outputs, and options.
+See the [reconstruction README](recon/README.md) for inputs, outputs, and options,
+and the [tracking README](rl/README.md) for training and evaluating the
+tracking policy.
 
 ## Citation
 
@@ -96,9 +99,14 @@ The reconstruction pipeline integrates MoGe-2, GroundingDINO, SAM 2,
 FoundationPose, WiLoR, and HOI-DETR. We thank the authors of these projects for
 making their work available. Please also cite the works relevant to your use;
 component links are collected in [recon/THIRD_PARTY.md](recon/THIRD_PARTY.md).
+The tracking code builds on ManipTrans, SimToolReal, SAPG, rl_games, and Isaac
+Gym Envs; see [rl/THIRD_PARTY.md](rl/THIRD_PARTY.md).
 
 ## License
 
 This repository is released under the [NVIDIA License](LICENSE), which limits
-use to non-commercial research and evaluation. Third-party code, checkpoints,
-and MANO data retain their own terms; see [recon/THIRD_PARTY.md](recon/THIRD_PARTY.md).
+use to non-commercial research and evaluation, except for `rl/`. The tracking
+component in `rl/` is modified from GPL-3.0 code and is released under the GNU
+General Public License v3.0 ([rl/LICENSE](rl/LICENSE)). Third-party code,
+checkpoints, and MANO data retain their own terms; see
+[recon/THIRD_PARTY.md](recon/THIRD_PARTY.md) and [rl/THIRD_PARTY.md](rl/THIRD_PARTY.md).

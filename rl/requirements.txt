@@ -1,0 +1,10 @@
+torch==2.4.1
+numpy==1.23.0
+scipy==1.10.0
+gym==0.23.1
+hydra-core==1.3.2
+omegaconf==2.3.0
+rl-games==1.6.1
+tensorboardX==2.6.2.2
+trimesh==3.23.5
+chumpy==0.70

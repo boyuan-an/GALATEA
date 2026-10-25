@@ -1,0 +1,26 @@
+defaults:
+  - train: BlockPPO
+  - task: ArmHandTrack
+  - object: power_drill
+  - override hydra/job_logging: disabled
+  - _self_
+
+seed: ${object.seed}
+torch_deterministic: false
+num_envs: 6144
+minibatch_size: 36864
+max_iterations: 32000
+multi_gpu: false
+experiment: ${object.name}
+full_experiment_name: null
+checkpoint: ""
+from_ckpt_epoch: true
+frame0_eval_only: false
+checkpoint_model_only: false
+sim_device: cuda:0
+rl_device: cuda:0
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .

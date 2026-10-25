@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.vscode/
+.idea/
+.DS_Store
+
+/data/
+/checkpoints/
+/runs/
+/outputs/
+*.log
+*.out
+
+*.pth
+*.pt
+*.tar.gz
+MANO*.pkl

@@ -1,0 +1,81 @@
+params:
+  seed: ${...seed}
+  algo:
+    name: block_ppo
+  model:
+    name: block_policy
+  network:
+    name: asymmetric_mlp
+    space:
+      continuous:
+        mu_activation: None
+        sigma_activation: None
+        mu_init:
+          name: default
+        sigma_init:
+          name: const_initializer
+          val: 0
+        fixed_sigma: true
+    mlp:
+      units: [1024, 1024, 512, 512]
+      activation: elu
+      initializer:
+        name: default
+    actor_feature_encoder:
+      _target_: armhand.rl.features.Identity
+      input_dim: 323
+    critic_feature_encoder:
+      _target_: armhand.rl.features.DictFeatureConcat
+      extractors:
+        privileged:
+          _target_: armhand.rl.features.Identity
+          input_dim: 66
+        proprioception:
+          _target_: armhand.rl.features.Identity
+          input_dim: 129
+        target:
+          _target_: armhand.rl.features.Identity
+          input_dim: 450
+  config:
+    name: ${....experiment}
+    full_experiment_name: null
+    env_name: isaac_env
+    multi_gpu: ${....multi_gpu}
+    mixed_precision: true
+    normalize_input_excluded_keys: [block_coef]
+    num_actors: ${....num_envs}
+    reward_shaper:
+      scale_value: 0.01
+    gamma: 0.99
+    tau: 0.95
+    learning_rate: 0.0001
+    lr_schedule: adaptive
+    kl_threshold: 0.016
+    adaptive_lr_min: 1.0e-05
+    adaptive_lr_max: 0.001
+    score_to_win: 1.0e+30
+    max_epochs: ${....max_iterations}
+    early_stop_epochs: 32002
+    save_best_after: 2
+    save_frequency: 250
+    print_stats: true
+    grad_norm: 1.0
+    entropy_coef: 0.002
+    e_clip: 0.1
+    clip_value: true
+    horizon_length: 24
+    minibatch_size: ${....minibatch_size}
+    mini_epochs: 2
+    critic_coef: 4.0
+    seq_length: 16
+    bounds_loss_coef: 0.0001
+    frame0_eval_interval: 250
+    frame0_eval_max_steps: 2000
+    blocks:
+      num_blocks: 6
+      coefficient_max: 50.0
+      coefficient_min: 0.0
+      entropy_scale: 0.005
+      off_policy_repeats: 1
+      embedding_dim: 32
+      eval_coefficient: 0.0

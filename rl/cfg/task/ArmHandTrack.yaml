@@ -1,0 +1,114 @@
+name: ArmHandTrack
+seed: ${..seed}
+env:
+  numEnvs: ${...num_envs}
+  episodeLength: 2000
+  controlFrequencyInv: 2
+  clipActions: 1.0
+  dataDir: ${...object.data_dir}
+  ikDir: ${...object.ik_dir}
+  dataIndices: ${...object.data_indices}
+  handSelfCollision: ${...object.hand_self_collision}
+  referenceFps: 60.0
+  floorLiftFps: 30.0
+  tableSurfaceZ: 0.415
+  robotUrdf: assets/robot/fr3_sharpa_right.urdf
+  robotBasePos: [0.0, 0.95, 0.0]
+  robotBaseYaw: -1.5707963267948966
+  armActionScale: 0.03
+  armSmoothing: 0.2
+  armJointMarginDeg: 10.0
+  handSmoothing: 0.1
+  handTargetDeadband: 0.01
+  metalFriction: 0.4
+  padFriction: 1.0
+  objectPosNoise: 0.008
+  objectRotNoiseDeg: 5.0
+  gravityRampSteps: 1920
+  gravityUpdateInterval: 32
+  gravityInitialScale: 0.0
+  randomStateInit: true
+  resetFrameFraction: 0.98
+  failureTolerance: 2.0
+  tightenFactor: 0.7
+  tightenSteps: 3200
+  tightenSchedule: exp_decay
+  handActionMask:
+    probability: 0.15
+    joints: 3
+    startMaxSteps: 1
+    endMaxSteps: 10
+    curriculumSteps: 25600
+    sigmaMin: 0.7
+  physicsRandomization:
+    handPdScale: [0.8, 1.2]
+    armPdScale: [0.8, 1.2]
+    surfaceFrictionScale: [0.5, 1.5]
+    objectFriction: [0.1, 0.2]
+    tableFriction: [0.1, 0.2]
+    objectMass: [0.02, 0.1]
+  reward:
+    wristPos: 0.1
+    wristRot: 3.0
+    wristRotSharpness: 1.91
+    level1: 0.5
+    level2: 0.3
+    freeSpaceDistance: 0.02
+    freeSpaceFingerScale: 2.0
+    contactFingerScale: 0.75
+    objectContactDistance: 0.005
+    lift: 3.0
+    liftHeight: 0.05
+    armActionRate: 0.05
+    handActionRate: 0.025
+    padContact:
+      forceThreshold: 0.1
+      distance: 0.015
+      surfaceSamples: 128
+    multiFingerContact:
+      scale: 0.5
+      four: 2.5
+      five: 5.0
+      warmupSteps: 2
+    padDistance:
+      scale: 2.5
+      tolerance: 0.015
+      sigma: 0.02
+      minReferenceContacts: 1
+      warmupSteps: 2
+    handVelocity:
+      scale: 0.04
+      referenceFraction: 0.15
+      max: 1.0
+      warmupSteps: 2
+      terminateFraction: 0.35
+      terminateWarmupSteps: 2
+      unlockSuccessRate: 0.5
+    armVelocity:
+      scale: 0.1
+      referenceFraction: 0.15
+      max: 1.0
+      terminateFraction: 0.15
+      warmupSteps: 2
+    torque:
+      scale: 0.2222222
+      deadzone: 0.2
+      max: 0.2222222
+sim:
+  dt: 0.016666666666666666
+  substeps: 2
+  gravity: [0.0, 0.0, -9.81]
+  physx:
+    num_threads: 4
+    solver_type: 1
+    use_gpu: true
+    num_position_iterations: 8
+    num_velocity_iterations: 0
+    contact_offset: 0.002
+    rest_offset: 0.0
+    bounce_threshold_velocity: 0.2
+    max_depenetration_velocity: 1.0
+    default_buffer_size_multiplier: 25.0
+    max_gpu_contact_pairs: 8388608
+    num_subscenes: 4
+    contact_collection: 1

@@ -1,0 +1,1241 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="fr3_right_sharpa">
+  <link name="base">
+      </link>
+  <joint name="fr3_base_joint" type="fixed">
+    <parent link="base" />
+    <child link="fr3_link0" />
+    <origin rpy="0 0 0" xyz="0 0 0" />
+  </joint>
+  <link name="fr3_link0">
+    <visual name="fr3_link0_visual">
+      <geometry>
+        <mesh filename="meshes_isaac/fr3_src_meshes_robots_fr3_visual_link0.obj" />
+      </geometry>
+    </visual>
+    <collision name="fr3_link0_collision">
+      <geometry>
+        <mesh filename="meshes_isaac/fr3_src_meshes_robots_fr3_collision_link0.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.0172 0.0004 0.0745" />
+      <mass value="2.3966" />
+      <inertia ixx="0.009" ixy="0.0" ixz="0.002" iyy="0.0115" iyz="0.0" izz="0.0085" />
+    </inertial>
+  </link>
+  <link name="fr3_link0_accelerometer_top">
+      </link>
+  <joint name="fr3_link0_accelerometer_top_joint" type="fixed">
+    <origin rpy="3.1416 0.0 0.0" xyz="-0.017402 -0.007872 0.04715" />
+    <parent link="fr3_link0" />
+    <child link="fr3_link0_accelerometer_top" />
+  </joint>
+  <link name="fr3_link0_accelerometer_bottom">
+      </link>
+  <joint name="fr3_link0_accelerometer_bottom_joint" type="fixed">
+    <origin rpy="0.0 0.0 -1.5708" xyz="-0.019739 0.0015506 0.05075" />
+    <parent link="fr3_link0" />
+    <child link="fr3_link0_accelerometer_bottom" />
+  </joint>
+  <link name="fr3_link1">
+    <visual name="fr3_link1_visual">
+      <geometry>
+        <mesh filename="meshes_isaac/fr3_src_meshes_robots_fr3_visual_link1.obj" />
+      </geometry>
+    </visual>
+    <collision name="fr3_link1_collision">
+      <geometry>
+        <mesh filename="meshes_isaac/fr3_src_meshes_robots_fr3_collision_link1.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0000004128 -0.0181251324 -0.0386035970" />
+      <mass value="2.9274653454" />
+      <inertia ixx="0.023927316485107913" ixy="1.3317903455714081e-05" ixz="-0.00011404774918616684" iyy="0.0224821613275756" iyz="-0.0019950320628240115" izz="0.006350098258530016" />
+    </inertial>
+  </link>
+  <link name="fr3_link1_accelerometer_top">
+      </link>
+  <joint name="fr3_link1_accelerometer_top_joint" type="fixed">
+    <origin rpy="-1.5708 0.0 3.1416" xyz="0.017402 -0.093352 -0.00787" />
+    <parent link="fr3_link1" />
+    <child link="fr3_link1_accelerometer_top" />
+  </joint>
+  <link name="fr3_link1_accelerometer_bottom">
+      </link>
+  <joint name="fr3_link1_accelerometer_bottom_joint" type="fixed">
+    <origin rpy="-1.5708 1.5708 0.0" xyz="0.01974 -0.08975 0.00155" />
+    <parent link="fr3_link1" />
+    <child link="fr3_link1_accelerometer_bottom" />
+  </joint>
+  <joint name="fr3_joint1" type="revolute">
+    <origin rpy="0 0 0" xyz="0 0 0.333" />
+    <parent link="fr3_link0" />
+    <child link="fr3_link1" />
+    <axis xyz="0 0 1" />
+    <limit effort="87.0" lower="-2.9007" upper="2.9007" velocity="2.62" />
+    <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.9007" soft_upper_limit="2.9007" />
+    <position_based_velocity_limits deceleration_limit="6.0" velocity_offset="0.652" />
+    <dynamics D="1" K="7000" damping="0.003" friction="0.2" gear_ratio="120.0" motor_inertia="4.206399e-05" mu_coulomb="0" mu_viscous="16" />
+  </joint>
+  <link name="fr3_link2">
+    <visual name="fr3_link2_visual">
+      <geometry>
+        <mesh filename="meshes_isaac/fr3_src_meshes_robots_fr3_visual_link2.obj" />
+      </geometry>
+    </visual>
+    <collision name="fr3_link2_collision">
+      <geometry>
+        <mesh filename="meshes_isaac/fr3_src_meshes_robots_fr3_collision_link2.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0031828864 -0.0743221644 0.0088146084" />
+      <mass value="2.9355370338" />
+      <inertia ixx="0.041938946257609425" ixy="0.00020257331521090626" ixz="0.004077784227179924" iyy="0.02514514885014724" iyz="-0.0042252158006570156" izz="0.06170214472888839" />
+    </inertial>
+  </link>
+  <link name="fr3_link2_accelerometer_top">
+      </link>
+  <joint name="fr3_link2_accelerometer_top_joint" type="fixed">
+    <origin rpy="1.5708 0.0 3.1416" xyz="0.017403 -0.11715 0.00787" />
+    <parent link="fr3_link2" />
+    <child link="fr3_link2_accelerometer_top" />
+  </joint>
+  <link name="fr3_link2_accelerometer_bottom">
+      </link>
+  <joint name="fr3_link2_accelerometer_bottom_joint" type="fixed">
+    <origin rpy="1.5708 -1.5708 0.0" xyz="0.019737 -0.11875 -0.00155" />
+    <parent link="fr3_link2" />
+    <child link="fr3_link2_accelerometer_bottom" />
+  </joint>
+  <joint name="fr3_joint2" type="revolute">
+    <origin rpy="-1.570796326794897 0 0" xyz="0 0 0" />
+    <parent link="fr3_link1" />
+    <child link="fr3_link2" />
+    <axis xyz="0 0 1" />
+    <limit effort="87.0" lower="-1.8361" upper="1.8361" velocity="2.62" />
+    <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-1.8361" soft_upper_limit="1.8361" />
+    <position_based_velocity_limits deceleration_limit="2.585" velocity_offset="0.25" />
+    <dynamics D="1" K="7000" damping="0.003" friction="0.2" gear_ratio="120.0" motor_inertia="4.206399e-05" mu_coulomb="0" mu_viscous="16" />
+  </joint>
+  <link name="fr3_link3">
+    <visual name="fr3_link3_visual">
+      <geometry>
+        <mesh filename="meshes_isaac/fr3_src_meshes_robots_fr3_visual_link3.obj" />
+      </geometry>
+    </visual>
+    <collision name="fr3_link3_collision">
+      <geometry>
+        <mesh filename="meshes_isaac/fr3_src_meshes_robots_fr3_collision_link3.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0407015686 -0.0048200565 -0.0289730823" />
+      <mass value="2.2449013699" />
+      <inertia ixx="0.02410142547240885" ixy="0.002404694559042109" ixz="-0.002856269270114313" iyy="0.01974053266708178" iyz="-0.002104212683891874" izz="0.019044494482244823" />
+    </inertial>
+  </link>
+  <link name="fr3_link3_accelerometer_top">
+      </link>
+  <joint name="fr3_link3_accelerometer_top_joint" type="fixed">
+    <origin rpy="-1.5708 0.0 0.0" xyz="0.065099 0.077352 -0.00787" />
+    <parent link="fr3_link3" />
+    <child link="fr3_link3_accelerometer_top" />
+  </joint>
+  <link name="fr3_link3_accelerometer_bottom">
+      </link>
+  <joint name="fr3_link3_accelerometer_bottom_joint" type="fixed">
+    <origin rpy="1.5708 1.5708 0.0" xyz="0.062769 0.073756 0.00155" />
+    <parent link="fr3_link3" />
+    <child link="fr3_link3_accelerometer_bottom" />
+  </joint>
+  <joint name="fr3_joint3" type="revolute">
+    <origin rpy="1.570796326794897 0 0" xyz="0 -0.316 0" />
+    <parent link="fr3_link2" />
+    <child link="fr3_link3" />
+    <axis xyz="0 0 1" />
+    <limit effort="87.0" lower="-2.9007" upper="2.9007" velocity="2.62" />
+    <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.9007" soft_upper_limit="2.9007" />
+    <position_based_velocity_limits deceleration_limit="3.5" velocity_offset="0.2005" />
+    <dynamics D="1" K="7000" damping="0.003" friction="0.2" gear_ratio="120.0" motor_inertia="3.211626e-05" mu_coulomb="0" mu_viscous="16" />
+  </joint>
+  <link name="fr3_link4">
+    <visual name="fr3_link4_visual">
+      <geometry>
+        <mesh filename="meshes_isaac/fr3_src_meshes_robots_fr3_visual_link4.obj" />
+      </geometry>
+    </visual>
+    <collision name="fr3_link4_collision">
+      <geometry>
+        <mesh filename="meshes_isaac/fr3_src_meshes_robots_fr3_collision_link4.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.0459100965 0.0630492960 -0.0085187868" />
+      <mass value="2.6155955791" />
+      <inertia ixx="0.03452998321913202" ixy="0.01322552265982813" ixz="0.01015142998484113" iyy="0.028881621933049058" iyz="-0.0009762833870704552" izz="0.04125471171146641" />
+    </inertial>
+  </link>
+  <link name="fr3_link4_accelerometer_top">
+      </link>
+  <joint name="fr3_link4_accelerometer_top_joint" type="fixed">
+    <origin rpy="-1.5708 0.0 -3.1416" xyz="-0.0651 0.046252 -0.00787" />
+    <parent link="fr3_link4" />
+    <child link="fr3_link4_accelerometer_top" />
+  </joint>
+  <link name="fr3_link4_accelerometer_bottom">
+      </link>
+  <joint name="fr3_link4_accelerometer_bottom_joint" type="fixed">
+    <origin rpy="-1.5708 1.5708 0.0" xyz="-0.062775 0.049753 0.00155" />
+    <parent link="fr3_link4" />
+    <child link="fr3_link4_accelerometer_bottom" />
+  </joint>
+  <joint name="fr3_joint4" type="revolute">
+    <origin rpy="1.570796326794897 0 0" xyz="0.0825 0 0" />
+    <parent link="fr3_link3" />
+    <child link="fr3_link4" />
+    <axis xyz="0 0 1" />
+    <limit effort="87.0" lower="-3.077" upper="-0.1169" velocity="2.62" />
+    <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-3.077" soft_upper_limit="-0.1169" />
+    <position_based_velocity_limits deceleration_limit="4.0" velocity_offset="0.3542" />
+    <dynamics D="1" K="7000" damping="0.003" friction="0.2" gear_ratio="120.0" motor_inertia="3.211626e-05" mu_coulomb="0" mu_viscous="16" />
+  </joint>
+  <link name="fr3_link5">
+    <visual name="fr3_link5_visual">
+      <geometry>
+        <mesh filename="meshes_isaac/fr3_src_meshes_robots_fr3_visual_link5.obj" />
+      </geometry>
+    </visual>
+    <collision name="fr3_link5_collision">
+      <geometry>
+        <mesh filename="meshes_isaac/fr3_src_meshes_robots_fr3_collision_link5.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.0016039605 0.0292536262 -0.0972965990" />
+      <mass value="2.3271207594" />
+      <inertia ixx="0.051610278463662895" ixy="-0.005715173387783472" ixz="-0.0035673167625872135" iyy="0.04787729713371481" iyz="0.010673985108535986" izz="0.016423625579357254" />
+    </inertial>
+  </link>
+  <link name="fr3_link5_accelerometer_top">
+      </link>
+  <joint name="fr3_link5_accelerometer_top_joint" type="fixed">
+    <origin rpy="-1.5708 0.0 0.0" xyz="-0.017363 0.085872 -0.00795" />
+    <parent link="fr3_link5" />
+    <child link="fr3_link5_accelerometer_top" />
+  </joint>
+  <link name="fr3_link5_accelerometer_bottom">
+      </link>
+  <joint name="fr3_link5_accelerometer_bottom_joint" type="fixed">
+    <origin rpy="1.5708 1.5708 0.0" xyz="-0.019742 0.082275 0.00146" />
+    <parent link="fr3_link5" />
+    <child link="fr3_link5_accelerometer_bottom" />
+  </joint>
+  <joint name="fr3_joint5" type="revolute">
+    <origin rpy="-1.570796326794897 0 0" xyz="-0.0825 0.384 0" />
+    <parent link="fr3_link4" />
+    <child link="fr3_link5" />
+    <axis xyz="0 0 1" />
+    <limit effort="12.0" lower="-2.8763" upper="2.8763" velocity="5.26" />
+    <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-2.8763" soft_upper_limit="2.8763" />
+    <position_based_velocity_limits deceleration_limit="17.0" velocity_offset="0.5738" />
+    <dynamics D="1" K="7000" damping="0.003" friction="0.2" gear_ratio="80.0" motor_inertia="3.211626e-05" mu_coulomb="0" mu_viscous="16" />
+  </joint>
+  <link name="fr3_link6">
+    <visual name="fr3_link6_visual">
+      <geometry>
+        <mesh filename="meshes_isaac/fr3_src_meshes_robots_fr3_visual_link6.obj" />
+      </geometry>
+    </visual>
+    <collision name="fr3_link6_collision">
+      <geometry>
+        <mesh filename="meshes_isaac/fr3_src_meshes_robots_fr3_collision_link6.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0597131221 -0.0410294666 -0.0101692726" />
+      <mass value="1.8170376524" />
+      <inertia ixx="0.005412333594383447" ixy="0.006193456360285834" ixz="0.0014219289306117652" iyy="0.014058329545509979" iyz="-0.0013140753741120031" izz="0.016080817924212554" />
+    </inertial>
+  </link>
+  <joint name="fr3_joint6" type="revolute">
+    <origin rpy="1.570796326794897 0 0" xyz="0 0 0" />
+    <parent link="fr3_link5" />
+    <child link="fr3_link6" />
+    <axis xyz="0 0 1" />
+    <limit effort="12.0" lower="0.4398" upper="4.6216" velocity="4.18" />
+    <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="0.4398" soft_upper_limit="4.6216" />
+    <position_based_velocity_limits deceleration_limit="5.5" velocity_offset="0.4885" />
+    <dynamics D="1" K="7000" damping="0.003" friction="0.2" gear_ratio="80.0" motor_inertia="3.211626e-05" mu_coulomb="0" mu_viscous="16" />
+  </joint>
+  <link name="fr3_link7">
+    <visual name="fr3_link7_visual">
+      <geometry>
+        <mesh filename="meshes_isaac/fr3_src_meshes_robots_fr3_visual_link7.obj" />
+      </geometry>
+    </visual>
+    <collision name="fr3_link7_collision">
+      <geometry>
+        <mesh filename="meshes_isaac/fr3_src_meshes_robots_fr3_collision_link7.stl" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.0045225817 0.0086261921 -0.0161633251" />
+      <mass value="0.6271432862" />
+      <inertia ixx="0.00021092389150104718" ixy="-2.433299114461931e-05" ixz="4.564480393778983e-05" iyy="0.00017718568002411474" iyz="8.744070223226438e-05" izz="5.993190599659971e-05" />
+    </inertial>
+  </link>
+  <joint name="fr3_joint7" type="revolute">
+    <origin rpy="1.570796326794897 0 0" xyz="0.088 0 0" />
+    <parent link="fr3_link6" />
+    <child link="fr3_link7" />
+    <axis xyz="0 0 1" />
+    <limit effort="12.0" lower="-3.0508" upper="3.0508" velocity="5.26" />
+    <safety_controller k_position="100.0" k_velocity="40.0" soft_lower_limit="-3.0508" soft_upper_limit="3.0508" />
+    <position_based_velocity_limits deceleration_limit="17.0" velocity_offset="0.4592" />
+    <dynamics D="1" K="7000" damping="0.003" friction="0.2" gear_ratio="80.0" motor_inertia="3.211626e-05" mu_coulomb="0" mu_viscous="16" />
+  </joint>
+  <link name="fr3_link8" />
+  <joint name="fr3_joint8" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0.107" />
+    <parent link="fr3_link7" />
+    <child link="fr3_link8" />
+  </joint>
+  <link name="Lconnector">
+    <inertial>
+      <origin xyz="0.0000 0 0.0350" rpy="0 0 0" />
+      <mass value="0.15" />
+      <inertia ixx="2.0e-4" ixy="0" ixz="0" iyy="2.0e-4" iyz="0" izz="2.0e-4" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="Lconn_L1p07_L2p00_mrp45.obj" />
+      </geometry>
+      <material name="Lconnector_mat">
+        <color rgba="0.58 0.60 0.65 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="Lconn_L1p07_L2p00_mrp45.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="fr3_Lconnector_fix" type="fixed">
+    <parent link="fr3_link8" />
+    <child link="Lconnector" />
+    <origin rpy="0 0 0" xyz="0 0 0" />
+  </joint>
+  <joint name="Lconnector_hand_joint" type="fixed">
+    <parent link="Lconnector" />
+    <child link="right_hand_flange" />
+    <origin rpy="-1.570796327 -0.785398163 -1.570796327" xyz="0.00000 0.00000 0.05250" />
+  </joint>
+  <link name="right_hand_flange">
+    <inertial>
+      <origin xyz="4.2E-3 -0.2E-4 3.6E-3" rpy="0 0 0" />
+      <mass value="0.016" />
+      <inertia ixx="5.924E-6" ixy="3.55E-10" ixz="4.4E-8" iyy="4.22E-6" iyz="7.28E-10" izz="9.97E-6" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac/sharpa_meshes_flange_B.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+  </link>
+  <joint name="right_hand_flange_fix_joint" type="fixed">
+    <origin xyz="0 0 0.0005" rpy="0 0 0" />
+    <parent link="right_hand_flange" />
+    <child link="right_hand_wrist" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="right_hand_wrist">
+    <inertial>
+      <origin xyz="-2.34E-3 2.2E-4 1.5E-2" rpy="0 0 0" />
+      <mass value="0.0505" />
+      <inertia ixx="1.25E-5" ixy="7.33E-9" ixz="5.4E-8" iyy="1.13E-5" iyz="1.01E-8" izz="1.64E-5" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac/sharpa_meshes_wrist_B.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac/sharpa_meshes_wrist_collision.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_hand_wrist_fix_joint" type="fixed">
+    <origin xyz="0 0 0.029" rpy="0 0 0" />
+    <parent link="right_hand_wrist" />
+    <child link="right_hand_C_MC" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="right_hand_C_MC">
+    <inertial>
+      <origin xyz="-0.00216 0.00536 0.04011" rpy="0 0 0" />
+      <mass value="0.6506" />
+      <inertia ixx="0.000674254" ixy="2.498E-06" ixz="-7.348E-06" iyy="0.000793354" iyz="-1.05749E-04" izz="0.000294753" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_hand_C_MC_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_hand_C_MC.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="right_thumb_CMC_VL">
+    <inertial>
+      <origin xyz="-6.5E-4 2E-4 0" rpy="0 0 0" />
+      <mass value="2.5E-03" />
+      <inertia ixx="2.08E-7" ixy="1.853E-8" ixz="0" iyy="1.39E-7" iyz="0" izz="2.60E-7" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_thumb_CMC_VL_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+  </link>
+  <joint name="right_thumb_CMC_FE" type="revolute">
+    <origin xyz="0.01 0.026 0.0214" rpy="3.1416 0 1.5708" />
+    <parent link="right_hand_C_MC" />
+    <child link="right_thumb_CMC_VL" />
+    <axis xyz="0 0 1" />
+    <limit lower="-0.1745" upper="1.9199" effort="3.3" velocity="11.84076833" />
+  </joint>
+  <link name="right_thumb_MC">
+    <inertial>
+      <origin xyz="0.03643 -0.01024 0.00517" rpy="0 0 0" />
+      <mass value="0.13587" />
+      <inertia ixx="1.9220E-05" ixy="-1.981E-08" ixz="5.1687E-07" iyy="4.3621E-05" iyz="-1.534E-06" izz="4.6191E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_thumb_MC_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_thumb_MC.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_thumb_CMC_AA" type="revolute">
+    <origin xyz="0 -0.005 0" rpy="-1.5708 0.7854 0" />
+    <parent link="right_thumb_CMC_VL" />
+    <child link="right_thumb_MC" />
+    <axis xyz="0 0 1" />
+    <limit lower="-0.3491" upper="0.3491" effort="3.3" velocity="11.84076833" />
+  </joint>
+  <link name="right_thumb_MCP_VL">
+    <inertial>
+      <origin xyz="-1.29E-09 -1.1E-10 0.00" rpy="0 0 0" />
+      <mass value="8E-5" />
+      <inertia ixx="6.4E-08" ixy="-1.61E-09" ixz="0" iyy="3.8E-08" iyz="0" izz="7.9E-08" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_thumb_MCP_VL_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+  </link>
+  <joint name="right_thumb_MCP_FE" type="revolute">
+    <origin xyz="0.065 -0.006 0.010392" rpy="0.5236 0 0" />
+    <parent link="right_thumb_MC" />
+    <child link="right_thumb_MCP_VL" />
+    <axis xyz="0 0 1" />
+    <limit lower="-0.5236" upper="1.3963" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="right_thumb_PP">
+    <inertial>
+      <origin xyz="0.021256 -0.00095 -0.00092" rpy="0 0 0" />
+      <mass value="0.03078" />
+      <inertia ixx="1.255E-06" ixy="-4.00E-07" ixz="-4.267E-08" iyy="6.047E-06" iyz="2.004E-08" izz="5.915E-06" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_thumb_PP_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_thumb_PP.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_thumb_MCP_AA" type="revolute">
+    <origin xyz="0 0 0" rpy="-1.5708 0 0" />
+    <parent link="right_thumb_MCP_VL" />
+    <child link="right_thumb_PP" />
+    <axis xyz="0 0 1" />
+    <limit lower="-0.3491" upper="0.3491" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="right_thumb_DP">
+    <inertial>
+      <origin xyz="0.00832 -0.00180 -0.00101" rpy="0 0 0" />
+      <mass value="0.00788" />
+      <inertia ixx="3.1462E-07" ixy="-1.026E-07" ixz="7.094E-08" iyy="1.038E-06" iyz="-1.40E-08" izz="1.05884E-06" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_DP_Visual_HB1_TH.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_DP_HB1_TH.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_thumb_IP" type="revolute">
+    <origin xyz="0.039 0 0" rpy="1.5708 0 0" />
+    <parent link="right_thumb_PP" />
+    <child link="right_thumb_DP" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="1.7453" effort="0.638" velocity="11.61831603" />
+  </joint>
+  <link name="right_thumb_elastomer">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="1E-4" />
+      <inertia ixx="1E-10" ixy="0" ixz="0" iyy="1E-10" iyz="0" izz="1E-10" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_elastomer_HB1_TH.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.2 1 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_elastomer_HB1_TH.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_thumb_elastomer_fix_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="1.5708 -1.5708 0" />
+    <parent link="right_thumb_DP" />
+    <child link="right_thumb_elastomer" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="right_thumb_fingertip">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="1.0E-06" />
+      <inertia ixx="2.0E-12" ixy="0" ixz="0" iyy="2.0E-12" iyz="0" izz="2.0E-12" />
+    </inertial>
+  </link>
+  <joint name="right_thumb_fingertip_fix_joint" type="fixed">
+    <origin xyz="0 -0.027611 0" rpy="1.5708 1.5708 0" />
+    <parent link="right_thumb_elastomer" />
+    <child link="right_thumb_fingertip" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="right_index_MCP_VL">
+    <inertial>
+      <origin xyz="-9.2E-03 1.3E-03 0" rpy="0 0 0" />
+      <mass value="2.21E-03" />
+      <inertia ixx="1.77E-07" ixy="-5.4E-09" ixz="0" iyy="1.104E-07" iyz="0" izz="2.23E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_MCP_VL_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_MCP_VL.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_index_MCP_FE" type="revolute">
+    <origin xyz="0.001 0.0303 0.0959" rpy="0 -1.5708 -1.5708" />
+    <parent link="right_hand_C_MC" />
+    <child link="right_index_MCP_VL" />
+    <axis xyz="0 0 1" />
+    <limit lower="-0.17453293" upper="1.5708" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="right_index_PP">
+    <inertial>
+      <origin xyz="0.0270 5.5E-4 6.8E-4" rpy="0 0 0" />
+      <mass value="0.04741" />
+      <inertia ixx="2.168E-06" ixy="3.29E-7" ixz="1.34E-7" iyy="1.1394E-5" iyz="-1.608E-8" izz="1.1045E-5" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_PP_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_PP.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_index_MCP_AA" type="revolute">
+    <origin xyz="0 0 0" rpy="-1.5708 0 0" />
+    <parent link="right_index_MCP_VL" />
+    <child link="right_index_PP" />
+    <axis xyz="0 0 1" />
+    <limit lower="-0.3491" upper="0.3491" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="right_index_MP">
+    <inertial>
+      <origin xyz="0.01212 -0.00116 5.8E-4" rpy="0 0 0" />
+      <mass value="0.01824" />
+      <inertia ixx="5.77E-7" ixy="-1.835E-8" ixz="1.0615E-7" iyy="1.923E-6" iyz="-4.01E-9" izz="1.9986E-6" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_MP_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_MP.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_index_PIP" type="revolute">
+    <origin xyz="0.047 0 0" rpy="1.5708 0 0" />
+    <parent link="right_index_PP" />
+    <child link="right_index_MP" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="1.7453" effort="0.638" velocity="11.61831603" />
+  </joint>
+  <link name="right_index_DP">
+    <inertial>
+      <origin xyz="0.01276 -0.00263 -1.1E-4" rpy="0 0 0" />
+      <mass value="0.00455" />
+      <inertia ixx="1.343E-7" ixy="-1.48E-9" ixz="5.97E-9" iyy="2.9365E-7" iyz="-8.7E-10" izz="2.981E-7" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_DP_visual_HB1_4F.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_DP_HB1_4F.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_index_DIP" type="revolute">
+    <origin xyz="0.0315 0 0" rpy="0 0 0" />
+    <parent link="right_index_MP" />
+    <child link="right_index_DP" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="1.3963" effort="0.189369" velocity="14.66594768" />
+  </joint>
+  <link name="right_index_elastomer">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="1E-4" />
+      <inertia ixx="1E-10" ixy="0" ixz="0" iyy="1E-10" iyz="0" izz="1E-10" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_elastomer_HB1_4F.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.2 1 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_elastomer_HB1_4F.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_index_elastomer_fix_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="1.5708 -1.5708 0" />
+    <parent link="right_index_DP" />
+    <child link="right_index_elastomer" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="right_index_fingertip">
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+      <mass value="1.0E-06" />
+      <inertia ixx="2.0E-12" ixy="0" ixz="0" iyy="2.0E-12" iyz="0" izz="2.0E-12" />
+    </inertial>
+  </link>
+  <joint name="right_index_fingertip_fix_joint" type="fixed">
+    <origin xyz="0 -0.026009 0" rpy="1.5708 1.5708 0" />
+    <parent link="right_index_elastomer" />
+    <child link="right_index_fingertip" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="right_middle_MCP_VL">
+    <inertial>
+      <origin xyz="-9.2E-03 1.3E-03 0" rpy="0 0 0" />
+      <mass value="2.21E-03" />
+      <inertia ixx="1.77E-07" ixy="-5.4E-09" ixz="0" iyy="1.104E-07" iyz="0" izz="2.23E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_MCP_VL_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_MCP_VL.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_middle_MCP_FE" type="revolute">
+    <origin xyz="0 0.01 0.0989" rpy="0 -1.5708 -1.5708" />
+    <parent link="right_hand_C_MC" />
+    <child link="right_middle_MCP_VL" />
+    <axis xyz="0 0 1" />
+    <limit lower="-0.17453293" upper="1.5708" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="right_middle_PP">
+    <inertial>
+      <origin xyz="0.0270 5.5E-4 6.8E-4" rpy="0 0 0" />
+      <mass value="0.04741" />
+      <inertia ixx="2.168E-06" ixy="3.29E-7" ixz="1.34E-7" iyy="1.1394E-5" iyz="-1.608E-8" izz="1.1045E-5" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_PP_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_PP.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_middle_MCP_AA" type="revolute">
+    <origin xyz="0 0 0" rpy="-1.5708 0 0" />
+    <parent link="right_middle_MCP_VL" />
+    <child link="right_middle_PP" />
+    <axis xyz="0 0 1" />
+    <limit lower="-0.3491" upper="0.3491" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="right_middle_MP">
+    <inertial>
+      <origin xyz="0.01212 -0.00116 5.8E-4" rpy="0 0 0" />
+      <mass value="0.01824" />
+      <inertia ixx="5.77E-7" ixy="-1.835E-8" ixz="1.0615E-7" iyy="1.923E-6" iyz="-4.01E-9" izz="1.9986E-6" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_MP_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_MP.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_middle_PIP" type="revolute">
+    <origin xyz="0.047 0 0" rpy="1.5708 0 0" />
+    <parent link="right_middle_PP" />
+    <child link="right_middle_MP" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="1.7453" effort="0.638" velocity="11.61831603" />
+  </joint>
+  <link name="right_middle_DP">
+    <inertial>
+      <origin xyz="0.01276 -0.00263 -1.1E-4" rpy="0 0 0" />
+      <mass value="0.00455" />
+      <inertia ixx="1.343E-7" ixy="-1.48E-9" ixz="5.97E-9" iyy="2.9365E-7" iyz="-8.7E-10" izz="2.981E-7" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_DP_visual_HB1_4F.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_DP_HB1_4F.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_middle_DIP" type="revolute">
+    <origin xyz="0.0315 0 0" rpy="0 0 0" />
+    <parent link="right_middle_MP" />
+    <child link="right_middle_DP" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="1.3963" effort="0.189369" velocity="14.66594768" />
+  </joint>
+  <link name="right_middle_elastomer">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="1E-4" />
+      <inertia ixx="1E-10" ixy="0" ixz="0" iyy="1E-10" iyz="0" izz="1E-10" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_elastomer_HB1_4F.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.2 1 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_elastomer_HB1_4F.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_middle_elastomer_fix_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="1.5707963267949 -1.5707963267949 0" />
+    <parent link="right_middle_DP" />
+    <child link="right_middle_elastomer" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="right_middle_fingertip">
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+      <mass value="1.0E-06" />
+      <inertia ixx="2.0E-12" ixy="0" ixz="0" iyy="2.0E-12" iyz="0" izz="2.0E-12" />
+    </inertial>
+  </link>
+  <joint name="right_middle_fingertip_fix_joint" type="fixed">
+    <origin xyz="0 -0.0260092574262507 0" rpy="1.5707963267949 1.5707963267949 0" />
+    <parent link="right_middle_elastomer" />
+    <child link="right_middle_fingertip" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="right_ring_MCP_VL">
+    <inertial>
+      <origin xyz="-9.2E-03 1.3E-03 0" rpy="0 0 0" />
+      <mass value="2.21E-03" />
+      <inertia ixx="1.77E-07" ixy="-5.4E-09" ixz="0" iyy="1.104E-07" iyz="0" izz="2.23E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_MCP_VL_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_MCP_VL.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_ring_MCP_FE" type="revolute">
+    <origin xyz="0.0015 -0.0103 0.0929" rpy="0 -1.5708 -1.5708" />
+    <parent link="right_hand_C_MC" />
+    <child link="right_ring_MCP_VL" />
+    <axis xyz="0 0 1" />
+    <limit lower="-0.17453293" upper="1.5708" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="right_ring_PP">
+    <inertial>
+      <origin xyz="0.0270 5.5E-4 6.8E-4" rpy="0 0 0" />
+      <mass value="0.04741" />
+      <inertia ixx="2.168E-06" ixy="3.29E-7" ixz="1.34E-7" iyy="1.1394E-5" iyz="-1.608E-8" izz="1.1045E-5" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_PP_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_PP.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_ring_MCP_AA" type="revolute">
+    <origin xyz="0 0 0" rpy="-1.5708 0 0" />
+    <parent link="right_ring_MCP_VL" />
+    <child link="right_ring_PP" />
+    <axis xyz="0 0 1" />
+    <limit lower="-0.3491" upper="0.3491" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="right_ring_MP">
+    <inertial>
+      <origin xyz="0.01212 -0.00116 5.8E-4" rpy="0 0 0" />
+      <mass value="0.01824" />
+      <inertia ixx="5.77E-7" ixy="-1.835E-8" ixz="1.0615E-7" iyy="1.923E-6" iyz="-4.01E-9" izz="1.9986E-6" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_MP_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_MP.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_ring_PIP" type="revolute">
+    <origin xyz="0.047 0 0" rpy="1.5708 0 0" />
+    <parent link="right_ring_PP" />
+    <child link="right_ring_MP" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="1.7453" effort="0.638" velocity="11.61831603" />
+  </joint>
+  <link name="right_ring_DP">
+    <inertial>
+      <origin xyz="0.01276 -0.00263 -1.1E-4" rpy="0 0 0" />
+      <mass value="0.00455" />
+      <inertia ixx="1.343E-7" ixy="-1.48E-9" ixz="5.97E-9" iyy="2.9365E-7" iyz="-8.7E-10" izz="2.981E-7" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_DP_visual_HB1_4F.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_DP_HB1_4F.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_ring_DIP" type="revolute">
+    <origin xyz="0.0315 0 0" rpy="0 0 0" />
+    <parent link="right_ring_MP" />
+    <child link="right_ring_DP" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="1.3963" effort="0.189369" velocity="14.66594768" />
+  </joint>
+  <link name="right_ring_elastomer">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="1E-4" />
+      <inertia ixx="1E-10" ixy="0" ixz="0" iyy="1E-10" iyz="0" izz="1E-10" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_elastomer_HB1_4F.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.2 1 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_elastomer_HB1_4F.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_ring_elastomer_fix_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="1.5708 -1.5708 0" />
+    <parent link="right_ring_DP" />
+    <child link="right_ring_elastomer" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="right_ring_fingertip">
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+      <mass value="1.0E-06" />
+      <inertia ixx="2.0E-12" ixy="0" ixz="0" iyy="2.0E-12" iyz="0" izz="2.0E-12" />
+    </inertial>
+  </link>
+  <joint name="right_ring_fingertip_fix_joint" type="fixed">
+    <origin xyz="0 -0.0260092574262503 0" rpy="1.5707963267949 1.5707963267949 0" />
+    <parent link="right_ring_elastomer" />
+    <child link="right_ring_fingertip" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="right_pinky_MC">
+    <inertial>
+      <origin xyz="0.0107985 0.00598801 -0.0335125" rpy="0 0 0" />
+      <mass value="0.12541" />
+      <inertia ixx="3.7226E-05" ixy="-3.22784E-08" ixz="7.9079E-07" iyy="4.4739E-05" iyz="1.019E-06" izz="1.7056E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_pinky_MC_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_pinky_MC.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_pinky_CMC" type="revolute">
+    <origin xyz="0.01136 -0.0263 0.0869" rpy="0 0 3.1416" />
+    <parent link="right_hand_C_MC" />
+    <child link="right_pinky_MC" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="0.2618" effort="0.5285" velocity="35.07416159" />
+  </joint>
+  <link name="right_pinky_MCP_VL">
+    <inertial>
+      <origin xyz="-9.2E-03 1.3E-03 0" rpy="0 0 0" />
+      <mass value="2.21E-03" />
+      <inertia ixx="1.77E-07" ixy="-5.4E-09" ixz="0" iyy="1.104E-07" iyz="0" izz="2.23E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_MCP_VL_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_MCP_VL.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_pinky_MCP_FE" type="revolute">
+    <origin xyz="0.00836 0.0048 0" rpy="1.5708 -1.5708 0" />
+    <parent link="right_pinky_MC" />
+    <child link="right_pinky_MCP_VL" />
+    <axis xyz="0 0 1" />
+    <limit lower="-0.17453293" upper="1.5708" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="right_pinky_PP">
+    <inertial>
+      <origin xyz="0.0270 5.5E-4 6.8E-4" rpy="0 0 0" />
+      <mass value="0.04741" />
+      <inertia ixx="2.168E-06" ixy="3.29E-7" ixz="1.34E-7" iyy="1.1394E-5" iyz="-1.608E-8" izz="1.1045E-5" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_PP_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_PP.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_pinky_MCP_AA" type="revolute">
+    <origin xyz="0 0 0" rpy="-1.5708 0 0" />
+    <parent link="right_pinky_MCP_VL" />
+    <child link="right_pinky_PP" />
+    <axis xyz="0 0 1" />
+    <limit lower="-0.3491" upper="0.3491" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="right_pinky_MP">
+    <inertial>
+      <origin xyz="0.01212 -0.00116 5.8E-4" rpy="0 0 0" />
+      <mass value="0.01824" />
+      <inertia ixx="5.77E-7" ixy="-1.835E-8" ixz="1.0615E-7" iyy="1.923E-6" iyz="-4.01E-9" izz="1.9986E-6" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_MP_visual.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_right_MP.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_pinky_PIP" type="revolute">
+    <origin xyz="0.047 0 0" rpy="1.5708 0 0" />
+    <parent link="right_pinky_PP" />
+    <child link="right_pinky_MP" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="1.7453" effort="0.638" velocity="11.61831603" />
+  </joint>
+  <link name="right_pinky_DP">
+    <inertial>
+      <origin xyz="0.01276 -0.00263 -1.1E-4" rpy="0 0 0" />
+      <mass value="0.00455" />
+      <inertia ixx="1.343E-7" ixy="-1.48E-9" ixz="5.97E-9" iyy="2.9365E-7" iyz="-8.7E-10" izz="2.981E-7" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_DP_visual_HB1_4F.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_DP_HB1_4F.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_pinky_DIP" type="revolute">
+    <origin xyz="0.0315 0 0" rpy="0 0 0" />
+    <parent link="right_pinky_MP" />
+    <child link="right_pinky_DP" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="1.3963" effort="0.189369" velocity="14.66594768" />
+  </joint>
+  <link name="right_pinky_elastomer">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="1E-4" />
+      <inertia ixx="1E-10" ixy="0" ixz="0" iyy="1E-10" iyz="0" izz="1E-10" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_elastomer_HB1_4F.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.1 1 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes_isaac_wave14_hb1/sharpa_meshes_elastomer_HB1_4F.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_pinky_elastomer_fix_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="1.5708 -1.5708 0" />
+    <parent link="right_pinky_DP" />
+    <child link="right_pinky_elastomer" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="right_pinky_fingertip">
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+      <mass value="1.0E-06" />
+      <inertia ixx="2.0E-12" ixy="0" ixz="0" iyy="2.0E-12" iyz="0" izz="2.0E-12" />
+    </inertial>
+  </link>
+  <joint name="right_pinky_fingertip_fix_joint" type="fixed">
+    <origin xyz="0 -0.026009 0" rpy="1.5708 1.5708 0" />
+    <parent link="right_pinky_elastomer" />
+    <child link="right_pinky_fingertip" />
+    <axis xyz="0 0 0" />
+  </joint>
+</robot>
