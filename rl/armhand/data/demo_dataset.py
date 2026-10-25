@@ -119,8 +119,8 @@ class DemoDataset:
     @lru_cache(maxsize=None)
     def __getitem__(self, data_index):
         seq_dir = self.sequence_dirs[data_index]
-        raw = np.load(os.path.join(seq_dir, "102_sv_dict.npy"), allow_pickle=True).item()
-        mesh = trimesh.load(os.path.join(seq_dir, "102_obj.obj"), process=False)
+        raw = np.load(os.path.join(seq_dir, "motion.npy"), allow_pickle=True).item()
+        mesh = trimesh.load(os.path.join(seq_dir, "object.obj"), process=False)
         length = len(raw["object_global_orient"])
         object_pose = np.eye(4)[None].repeat(length, axis=0)
         object_pose[:, :3, :3] = aa_to_rotmat(raw["object_global_orient"]).transpose(0, 2, 1)
@@ -142,7 +142,7 @@ class DemoDataset:
         )
         data = {
             "object_points": surface,
-            "object_urdf": os.path.join(seq_dir, "102_obj_coacd.urdf"),
+            "object_urdf": os.path.join(seq_dir, "object_collision.urdf"),
             "object_pose": torch.tensor(np.stack(object_pose.cpu()), device=self.device, dtype=torch.float),
             "wrist_pos": wrist_pos,
             "wrist_rot": wrist_rot,

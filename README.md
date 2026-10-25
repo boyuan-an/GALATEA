@@ -48,14 +48,14 @@ We will publicly release the remaining item below **before November 2026**.
 
 - [x] Release the [HOI reconstruction code](recon/README.md) and [example generated videos](recon/examples/power_drill/README.md).
 - [x] Release the [reinforcement-learning tracking code](rl/README.md) and pretrained checkpoints.
-- [ ] Release the example datasets for reinforcement-learning tracking.
+- [x] Release the [example datasets](rl/README.md#data-and-checkpoints) for reinforcement-learning tracking.
 
 ## Repository structure
 
 | Directory | Contents | Status |
 |---|---|---|
 | [`recon/`](recon/README.md) | HOI reconstruction: from a generated video and an object mesh to hand–object trajectories, with installation, the bundled example, and baseline adapters | Released |
-| [`rl/`](rl/README.md) | Reinforcement-learning tracking: training and evaluation of the arm–hand tracking policy, with pretrained checkpoints | Released |
+| [`rl/`](rl/README.md) | Reinforcement-learning tracking: data preprocessing, training and evaluation of the arm–hand tracking policy, with pretrained checkpoints and datasets | Released |
 
 Each component has its own environments and documentation. To run the bundled
 reconstruction example:
@@ -75,8 +75,8 @@ bash scripts/run_example.sh --gpu 0
 ```
 
 See the [reconstruction README](recon/README.md) for inputs, outputs, and options,
-and the [tracking README](rl/README.md) for training and evaluating the
-tracking policy.
+and the [tracking README](rl/README.md) for data preprocessing and for training
+and evaluating the tracking policy.
 
 ## Citation
 
