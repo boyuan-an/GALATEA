@@ -1,5 +1,7 @@
+import hashlib
 import math
 import os
+import xml.etree.ElementTree as ET
 
 import numpy as np
 import torch
@@ -73,6 +75,20 @@ DONE_METRICS = (
 )
 NUM_ACTOR_DOFS = len(ARM_JOINTS) + NUM_HAND_DOFS
 NUM_BODIES = len(HAND_BODIES)
+
+
+def _asset_content_key(urdf_path):
+    digest = hashlib.sha256(b"urdf\0")
+    with open(urdf_path, "rb") as f:
+        urdf_bytes = f.read()
+    digest.update(urdf_bytes)
+    for mesh in ET.fromstring(urdf_bytes).iter("mesh"):
+        name = mesh.attrib.get("filename", "")
+        if name:
+            digest.update(b"\0mesh\0" + name.encode("utf-8"))
+            with open(os.path.join(os.path.dirname(urdf_path), name), "rb") as f:
+                digest.update(f.read())
+    return digest.hexdigest()
 
 
 class ArmHandTrackEnv(SimTask):
@@ -321,6 +337,7 @@ class ArmHandTrackEnv(SimTask):
         mass_lower, mass_upper = self.cfg["env"]["physicsRandomization"]["objectMass"]
         mass_targets = self.mass_rng.uniform(mass_lower, mass_upper, size=self.num_envs).astype(np.float32)
         object_assets = {}
+        asset_keys = {}
         self.envs = []
         self.robot_actors = []
         self.table_actors = []
@@ -332,7 +349,10 @@ class ArmHandTrackEnv(SimTask):
             env_ptr = self.gym.create_env(self.sim, lower, upper, num_per_row)
             demo = demos[i % len(demos)]
             urdf_path = demo["object_urdf"]
-            if urdf_path not in object_assets:
+            if urdf_path not in asset_keys:
+                asset_keys[urdf_path] = _asset_content_key(urdf_path)
+            asset_key = asset_keys[urdf_path]
+            if asset_key not in object_assets:
                 object_options = gymapi.AssetOptions()
                 object_options.override_com = True
                 object_options.override_inertia = True
@@ -346,8 +366,8 @@ class ArmHandTrackEnv(SimTask):
                 object_options.vhacd_enabled = False
                 object_options.density = 1000.0
                 object_options.mesh_normal_mode = gymapi.COMPUTE_PER_VERTEX
-                object_assets[urdf_path] = self.gym.load_asset(self.sim, *os.path.split(urdf_path), object_options)
-            object_asset = object_assets[urdf_path]
+                object_assets[asset_key] = self.gym.load_asset(self.sim, *os.path.split(urdf_path), object_options)
+            object_asset = object_assets[asset_key]
             object_bodies = self.gym.get_asset_rigid_body_count(object_asset)
             object_shapes = self.gym.get_asset_rigid_shape_count(object_asset)
             self.gym.begin_aggregate(env_ptr, robot_bodies + 1 + object_bodies + 5, robot_shapes + 1 + object_shapes + 5, True)
