@@ -21,7 +21,9 @@
 
 <h3 align="center">
   <a href="https://boyuan-an.github.io/GALATEA/resources/GALATEA_paper.pdf">📄 Paper</a> |
-  <a href="https://boyuan-an.github.io/GALATEA/">🌐 Project Page</a>
+  <a href="https://arxiv.org/abs/2609.10050">📝 arXiv</a> |
+  <a href="https://boyuan-an.github.io/GALATEA/">🌐 Project Page</a> |
+  <a href="https://youtu.be/PQu57V2XnlM">🎬 Video</a>
 </h3>
 
 > [!NOTE]
@@ -34,7 +36,10 @@
 
 ## TL;DR
 
-Video generation as reference data to train RL dexterous controller when training, and as motion planner executed by the tracker when deploying.
+GALATEA does two things:
+
+1. **Hand–object reconstruction from generated videos**: recovers a metric MANO hand trajectory and a 6-DoF object trajectory from each clip. Code: [`recon/`](recon/README.md).
+2. **A general hand–object tracking policy trained with reinforcement learning (RL)**: one policy for many objects and trajectories, on a Franka arm with a Sharpa Wave hand. Code: [`rl/`](rl/README.md).
 
 ## Abstract
 

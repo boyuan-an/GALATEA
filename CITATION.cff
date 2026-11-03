@@ -1,0 +1,63 @@
+cff-version: 1.2.0
+message: "If you use this code in your research, please cite the paper below."
+title: "GALATEA: Grounding Generated Video Plans in Simulation Towards Versatile Dexterous Controllers"
+type: software
+abstract: >-
+  GALATEA reconstructs 3D hand-object trajectories from generated videos and
+  uses them as references to train one general hand-object tracking policy with
+  reinforcement learning (RL): a single policy for many objects and trajectories
+  that runs closed-loop on a real dexterous robot hand.
+repository-code: "https://github.com/boyuan-an/GALATEA"
+url: "https://boyuan-an.github.io/GALATEA/"
+keywords:
+  - dexterous manipulation
+  - hand-object interaction
+  - hand-object reconstruction
+  - video generation
+  - reinforcement learning
+  - motion tracking
+  - sim-to-real
+authors:
+  - family-names: Wu
+    given-names: Tianyue
+  - family-names: An
+    given-names: Boyuan
+  - family-names: Zhao
+    given-names: Shuqi
+  - family-names: Guo
+    given-names: Heyu
+  - family-names: Xing
+    given-names: Wanli
+  - family-names: Ma
+    given-names: Yi
+  - family-names: Zhang
+    given-names: Kaifeng
+  - family-names: Wu
+    given-names: Ruihai
+  - family-names: Tomizuka
+    given-names: Masayoshi
+preferred-citation:
+  type: article
+  title: "Grounding Generated Video Plans in Simulation Towards Versatile Dexterous Controllers"
+  journal: "arXiv preprint arXiv:2609.10050"
+  year: 2026
+  url: "https://arxiv.org/abs/2609.10050"
+  authors:
+    - family-names: Wu
+      given-names: Tianyue
+    - family-names: An
+      given-names: Boyuan
+    - family-names: Zhao
+      given-names: Shuqi
+    - family-names: Guo
+      given-names: Heyu
+    - family-names: Xing
+      given-names: Wanli
+    - family-names: Ma
+      given-names: Yi
+    - family-names: Zhang
+      given-names: Kaifeng
+    - family-names: Wu
+      given-names: Ruihai
+    - family-names: Tomizuka
+      given-names: Masayoshi
