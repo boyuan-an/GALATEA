@@ -93,13 +93,6 @@ body > .section .page-figure figcaption {
 }
 
 #figure-4 .hoi-intro { margin-top: 2.5rem; }
-#highlights #pipeline-showcase { max-width: none; margin: 0; }
-#figure-4 .hoi-explorer { gap: 1.5rem; }
-#figure-4 .hoi-object { padding: .65rem .75rem; font-size: .875rem; }
-#figure-4 .hoi-method { font-size: .875rem; }
-#figure-4 .hoi-card-heading { min-height: 44px; }
-#experiments .rollout-grid { margin-top: 2rem; }
-#experiments .experiment-placeholder { height: 100%; padding: 1.5rem; }
 
 #paper pre {
   margin: 0;
@@ -128,23 +121,6 @@ body > .section .page-figure figcaption {
   .overview-stages p { font-size: 1rem; }
 }
 
-@media (min-width: 1024px) {
-  #figure-4 .hoi-object,
-  #figure-4 .hoi-method,
-  #figure-4 .hoi-action,
-  #figure-4 .hoi-controls .button { font-size: 1rem; }
-  #figure-4 #hoi-status,
-  #figure-4 #hoi-layout,
-  #figure-4 .hoi-view-hint,
-  #figure-4 .hoi-selection-note { font-size: .875rem; }
-  #highlights .ps-sample,
-  #highlights .ps-action,
-  #highlights .ps-controls .button { font-size: .875rem; }
-  #highlights .ps-view-caption,
-  #highlights .ps-stage-button[data-stage="trajectory"] .ps-stage-caption { font-size: 1rem; }
-  #highlights .ps-step-label { font-size: .75rem; }
-  #highlights .ps-stage-caption { font-size: .8125rem; }
-}
 
 /* On wide 16:9 displays, constrain the reading column and reduce vertical
  * rhythm so the page does not feel like it is being viewed at 125% zoom. */
@@ -173,32 +149,10 @@ body > .section .page-figure figcaption {
   .overview-stages h3 { font-size: 1.3rem; }
   .overview-stages p { font-size: 1rem; line-height: 1.6; }
   body > .section .page-figure figcaption { font-size: 1rem; }
-  #highlights #pipeline-showcase { max-width: 1000px; margin-inline: auto; }
-  #highlights .ps-panel { padding: 16px; }
-  #highlights .ps-selector { padding-bottom: 12px; margin-bottom: 16px; }
-  #highlights .ps-reconstruction-group { margin-top: 16px; padding: .75rem; }
-  #highlights .ps-transport { margin-top: 12px; padding-top: .75rem; }
   #method .embedded-figure,
   #results .embedded-figure { max-height: min(680px, 68svh); object-fit: contain; }
-  #experiments .rollout-reel { max-width: min(1080px, 118svh); margin-inline: auto; }
-  #figure-4 #hoi-objects { max-height: min(600px, 60svh); }
 }
 
-/* Keep both comparison rows and their shared controls close together on
- * 1366×768 / 1440×900-class laptop viewports. */
-@media (min-width: 1200px) and (min-aspect-ratio: 3/2) and (max-height: 850px) {
-  #highlights { padding-block: 2rem; scroll-margin-top: 0; }
-  #highlights h2.title { font-size: 2rem; margin-bottom: 1rem; }
-  #highlights #pipeline-showcase { max-width: 840px; }
-  #highlights .ps-selector { padding-bottom: 8px; margin-bottom: 12px; }
-  #highlights .ps-sample { padding: .45rem .8rem; }
-  #highlights .ps-view-caption { min-height: 20px; margin-bottom: .35rem; font-size: .875rem; }
-  #highlights .ps-stages { max-width: 640px; margin-inline: auto; }
-  #highlights .ps-transport { margin-top: 8px; padding-top: .5rem; }
-  #highlights .ps-timeline-surface { padding-block: 8px; min-height: 34px; }
-  #highlights .ps-cursor { top: 5px; bottom: 5px; }
-  #highlights .ps-controls .button { min-height: 32px; font-size: .8rem; }
-}
 
 @media (max-width: 768px) {
   body > .section { padding: 3rem 1.5rem; }
@@ -211,8 +165,6 @@ body > .section .page-figure figcaption {
   #method .page-figure { margin-top: 2rem; }
   body > .section .page-figure figcaption { font-size: .9375rem; line-height: 1.65; }
   .page-intro, #figure-4 .hoi-intro { font-size: 1rem; line-height: 1.7; }
-  #figure-4 .hoi-intro { margin-top: 2rem; }
-  #figure-4 .hoi-explorer { gap: 1rem; }
   #paper pre { padding: 1.1rem; font-size: .8rem; }
 }
 

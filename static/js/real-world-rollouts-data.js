@@ -1,4 +1,5 @@
 window.GALATEA_ROLLOUTS = [
+  { id: "020", bytes: 660979, group: "Grasp-and-move", reviewedSeconds: 30.2 },
   { id: "001", bytes: 458119, group: "Gallery", reviewedSeconds: 28.2 },
   { id: "002", bytes: 623344, group: "Gallery", reviewedSeconds: 29.7 },
   { id: "003", bytes: 743275, group: "Gallery", reviewedSeconds: 36.6 },
@@ -18,7 +19,6 @@ window.GALATEA_ROLLOUTS = [
   { id: "017", bytes: 620646, group: "Grasp-and-move", reviewedSeconds: 34.4 },
   { id: "018", bytes: 592077, group: "Grasp-and-move", reviewedSeconds: 34.6 },
   { id: "019", bytes: 707250, group: "Grasp-and-move", reviewedSeconds: 33.3 },
-  { id: "020", bytes: 660979, group: "Grasp-and-move", reviewedSeconds: 30.2 },
   { id: "021", bytes: 638804, group: "Grasp-and-move", reviewedSeconds: 33.2 },
   { id: "023", bytes: 761653, group: "Grasp-and-move", reviewedSeconds: 41.6 },
   { id: "024", bytes: 506206, group: "Grasp-and-move", reviewedSeconds: 24.7 },

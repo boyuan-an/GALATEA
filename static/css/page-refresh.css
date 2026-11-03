@@ -1,0 +1,334 @@
+/* Real semibold for Noto Sans (SIL OFL 1.1, see ../fonts/OFL-NotoSans.txt), so bold text is not synthesized. */
+@font-face {
+  font-family: 'Noto Sans';
+  font-style: normal;
+  font-weight: 600 800;
+  font-display: swap;
+  src: url(../fonts/noto-sans-600-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Page refresh: one palette (the cover's ink and blue) on a light page below the cover,
+   shared player/tag/lightbox components, and the TL;DR, method, FAQ, and key-number blocks. */
+:root {
+  --accent: #3b7ea1;
+  --accent-light: #74b3d4;
+  --surface: #f4f7f9;
+  --heading: #1f2b31;
+  --text: #34424a;
+  --rule: #e3e8eb;
+  /* Same vertical rhythm as page-layout.css: section padding and title-to-content gap. */
+  --section-pad: 4rem;
+  --title-gap: 2rem;
+}
+@media (min-width: 1200px) and (min-aspect-ratio: 3/2) { :root { --section-pad: 3.25rem; --title-gap: 1.5rem; } }
+@media (max-width: 768px) { :root { --section-pad: 3rem; --title-gap: 1.5rem; } }
+
+
+/* Showcase (Highlights, rollouts): the wide media tier, same vertical rhythm as every
+   other section; text sections keep the reading width. */
+body > .section.section--showcase[id] > .container { max-width: 1400px; }
+
+/* Video */
+.project-video-player iframe { border-radius: 14px; }
+
+/* TL;DR */
+#tldr.section { padding-top: 0; padding-bottom: var(--section-pad); }
+#tldr .tldr-box {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 1.5rem 1.75rem;
+  border-left: 4px solid var(--accent);
+  border-radius: 0 16px 16px 0;
+  background: var(--surface);
+}
+#tldr .tldr-label {
+  margin: 0 0 .6rem;
+  color: var(--accent);
+  font-family: 'Google Sans', 'Noto Sans', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+}
+#tldr .tldr-box p,
+#tldr .tldr-box li { color: var(--text); font-size: clamp(1.15rem, 1.2vw, 1.375rem); line-height: 1.7; }
+#tldr .tldr-box p { margin-bottom: .4rem; }
+#tldr .tldr-box ol { margin: 0 0 0 1.4em; }
+#tldr .tldr-box li + li { margin-top: .4rem; }
+@media (max-width: 768px) { #tldr .tldr-box { padding: 1.1rem; } }
+
+/* Overview: numerals instead of stage tags */
+.overview-stages .academic-card { border: 0; border-radius: 16px; background: var(--surface); }
+.overview-stages .stage-number {
+  display: block;
+  color: var(--accent);
+  font-family: 'Google Sans', 'Noto Sans', sans-serif;
+  font-size: clamp(1.8rem, 2.4vw, 2.4rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -.03em;
+}
+
+/* FAQ */
+.faq { max-width: 60rem; margin: 0 auto; }
+.faq p { color: #4a5960; font-size: 1.125rem; line-height: 1.75; }
+.faq details { padding: 1rem 0; border-bottom: 1px solid var(--rule); }
+.faq summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--heading);
+  font-size: 1.15rem;
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after {
+  content: '+';
+  flex: none;
+  color: var(--accent);
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1;
+  transition: transform .2s ease;
+}
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq details p { margin: .75rem 0 0; }
+
+
+/* BibTeX */
+#paper pre {
+  padding: 1.5rem 1.75rem;
+  border: 0;
+  border-radius: 16px;
+  background: var(--surface);
+  font-size: .9rem;
+  line-height: 1.7;
+}
+#paper pre code { color: var(--text); }
+
+/* ---------- Typography and finish ---------- */
+
+/* Section titles in the real regular weight of Google Sans (no synthetic bold), looser tracking. */
+body > .section h2.title,
+#figure-4 #hoi-heading { color: var(--heading); font-weight: 400; letter-spacing: -.02em; }
+.overview-stages .stage-number { font-weight: 400; }
+#tldr .tldr-label { font-family: 'Noto Sans', sans-serif; font-weight: 600; }
+
+/* The project name inside text: same typeface as its sentence, set apart by color and tracking.
+   The cover wordmark keeps its serif. */
+.galatea-brand { color: var(--accent); font-family: inherit; font-weight: inherit; letter-spacing: .04em; }
+
+/* Links take the accent instead of the framework's indigo. */
+body > .section a:not(.button) { color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+body > .section a:not(.button):hover { color: #2d6888; }
+
+/* Paper figures sit on the same soft card as the TL;DR and overview cards; multiply lets their
+   white background take the card color. */
+.figure-card { padding: clamp(1.25rem, 3vw, 2.75rem); border-radius: 16px; background: var(--surface); }
+.figure-card .embedded-figure { display: block; margin: 0 auto; mix-blend-mode: multiply; }
+body > .section .page-figure figcaption { margin-top: 1.1rem; }
+
+/* The video frame gets the same depth as the Highlights screens. */
+.project-video-player iframe { box-shadow: 0 28px 56px -32px rgba(15, 30, 40, .45); }
+
+/* ---------- Shared components ---------- */
+
+/* Player: one round button and one line, themed by the section. */
+:root {
+  --player-fg: var(--heading);
+  --player-track: rgba(31, 43, 49, .14);
+  --player-border: rgba(31, 43, 49, .22);
+  --player-hover: rgba(31, 43, 49, .06);
+  --player-halo: rgba(31, 43, 49, .1);
+  --player-segment: rgba(59, 126, 161, .6);
+}
+.player { display: flex; align-items: center; gap: 1rem; }
+.player-button {
+  position: relative;
+  display: grid;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid var(--player-border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--player-fg);
+  cursor: pointer;
+  transition: background .2s ease, border-color .2s ease;
+}
+.player-button:hover { border-color: var(--player-fg); background: var(--player-hover); }
+.player-button:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 3px; }
+.player-button:disabled { opacity: .4; cursor: default; }
+.player-button svg { width: 18px; height: 18px; fill: currentColor; }
+.player-button .icon-pause { display: none; }
+.is-playing .player-button .icon-pause,
+.is-waiting .player-button .icon-pause { display: block; }
+.is-playing .player-button .icon-play,
+.is-waiting .player-button .icon-play { display: none; }
+.is-waiting .player-button::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 1.5px solid transparent;
+  border-top-color: var(--accent-light);
+  border-radius: 50%;
+  animation: player-spin 1s linear infinite;
+}
+@keyframes player-spin { to { transform: rotate(360deg); } }
+.player-track { position: relative; flex: 1; height: 28px; }
+.player-track::before,
+.player-segments,
+.player-progress {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 3px;
+}
+.player-track::before { content: ''; right: 0; background: var(--player-track); }
+.player-segments { right: 0; }
+.player-segment { position: absolute; top: 0; height: 100%; }
+.player-segment[data-phase="contact"] { top: -1px; height: 5px; border-radius: 3px; background: var(--player-segment); }
+/* Text above the tinted span: the contact window HOI-DETR detected automatically. */
+.player-segment-label {
+  position: absolute;
+  bottom: 11px;
+  display: flex;
+  justify-content: center;
+  color: var(--accent);
+  font-family: 'Google Sans', 'Noto Sans', sans-serif;
+  font-size: .76rem;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: .8;
+  transition: opacity .25s ease;
+}
+[data-phase="contact"] .player-segment-label { opacity: 1; }
+.player-segment-label .label-short { display: none; }
+@media (max-width: 640px) {
+  .player-segment-label .label-long { display: none; }
+  .player-segment-label .label-short { display: inline; }
+}
+.step-buttons { display: flex; flex: none; gap: .5rem; }
+.step-button { width: 40px; height: 40px; }
+.step-button svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.player-progress { width: 0; background: var(--player-fg); }
+.player-progress::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -6px;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--player-fg);
+  box-shadow: 0 0 0 4px var(--player-halo);
+}
+.player-scrub {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.player-scrub:disabled { cursor: default; }
+.player-track:focus-within::before { box-shadow: 0 0 0 3px rgba(116, 179, 212, .35); }
+.player-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.player-status.is-error {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 1rem 0 0;
+  overflow: visible;
+  clip: auto;
+  color: #b4533f;
+  font-size: .9rem;
+  text-align: center;
+  white-space: normal;
+}
+
+/* Tag: a small label on top of a video. */
+.media-tag {
+  position: absolute;
+  top: .75rem;
+  left: .8rem;
+  z-index: 1;
+  padding: .28rem .68rem;
+  border-radius: 999px;
+  background: rgba(5, 8, 10, .55);
+  color: rgba(255, 255, 255, .94);
+  font-family: 'Google Sans', 'Noto Sans', sans-serif;
+  font-size: .78rem;
+  letter-spacing: .03em;
+  line-height: 1.2;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+.media-tag--accent { background: rgba(59, 126, 161, .92); }
+
+/* Lightbox for every enlargeable video. */
+.media-dialog {
+  width: min(92vw, 1280px);
+  max-width: none;
+  max-height: 92vh;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 14px;
+  background: #000;
+  color: #fff;
+}
+.media-dialog::backdrop { background: rgba(3, 6, 8, .86); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+.media-dialog video { display: block; width: 100%; max-height: 92vh; background: #000; }
+.media-dialog__close {
+  position: absolute;
+  top: .75rem;
+  right: .75rem;
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, .55);
+  color: #fff;
+  font-size: 1.4rem;
+  line-height: 38px;
+  cursor: pointer;
+}
+.media-dialog__close:hover { background: rgba(0, 0, 0, .8); }
+.media-dialog__close:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+
+
+/* Footer: one line of template credit. */
+footer.footer.site-footer {
+  padding: clamp(1.75rem, 3.5vw, 2.5rem) 1.5rem;
+  border-top: 1px solid var(--rule);
+  background: #fff;
+  color: #6a777e;
+  text-align: center;
+}
+.site-footer__credit { margin: 0; font-size: .82rem; }
+.site-footer__credit a { color: #6a777e; text-decoration: underline; text-underline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .is-waiting .player-button::after { animation: none; }
+}
